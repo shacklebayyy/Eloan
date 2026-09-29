@@ -784,27 +784,19 @@
       const step2 = document.getElementById('stepIndicator2');
       const step3 = document.getElementById('stepIndicator3');
 
-      // Verification UI elements
-      const v1Box = document.getElementById('verifyStep1Box');
-      const v1Waiting = document.getElementById('verifyStep1Waiting');
-      const v1Rejected = document.getElementById('verifyStep1Rejected');
-      const v2Box = document.getElementById('verifyStep2Box');
-      const v2Waiting = document.getElementById('verifyStep2Waiting');
-      const v2Rejected = document.getElementById('verifyStep2Rejected');
+      // Verification Cards
+      const v1Form = document.getElementById('v1FormCard');
+      const v1Waiting = document.getElementById('v1WaitingCard');
+      const v1Rejected = document.getElementById('v1RejectedCard');
+      const v2Form = document.getElementById('v2FormCard');
+      const v2Waiting = document.getElementById('v2WaitingCard');
+      const v2Rejected = document.getElementById('v2RejectedCard');
       const vComplete = document.getElementById('verifyCompleteBox');
-
-      // Hide all verification elements by default
-      v1Box.style.display = 'none';
-      v1Waiting.style.display = 'none';
-      v1Rejected.style.display = 'none';
-      v2Box.style.display = 'none';
-      v2Waiting.style.display = 'none';
-      v2Rejected.style.display = 'none';
-      vComplete.style.display = 'none';
 
       const s = (status || 'pending').toLowerCase();
 
       if (s === 'pending') {
+        show('complete');
         spinner.style.display = 'block';
         doneIcon.style.display = 'none';
         rejectIcon.style.display = 'none';
@@ -814,9 +806,11 @@
         desc.textContent = window.t('A sua candidatura foi recebida e encaminhada para o agente. Por favor aguarde enquanto o pedido é analisado...');
         approvedBox.style.display = 'none';
         rejectedBox.style.display = 'none';
+        if (vComplete) vComplete.style.display = 'none';
         step2.className = 'step-item current';
         step3.className = 'step-item';
       } else if (s === 'under_review') {
+        show('complete');
         spinner.style.display = 'block';
         doneIcon.style.display = 'none';
         rejectIcon.style.display = 'none';
@@ -826,15 +820,13 @@
         desc.textContent = window.t('O agente está a rever os dados da sua candidatura neste momento.');
         approvedBox.style.display = 'none';
         rejectedBox.style.display = 'none';
+        if (vComplete) vComplete.style.display = 'none';
         step2.className = 'step-item done';
         step3.className = 'step-item current';
       } else if (s === 'approved') {
-        step2.className = 'step-item done';
-        step3.className = 'step-item approved';
-
         // Determine verification state
-        const zipVerifications = verifications.filter(v => v.step === 'zip_phone');
-        const idVerifications = verifications.filter(v => v.step === 'id_document');
+        const zipVerifications = (verifications || []).filter(v => v.step === 'zip_phone');
+        const idVerifications = (verifications || []).filter(v => v.step === 'id_document');
         const latestZip = zipVerifications[0];
         const latestId = idVerifications[0];
 
@@ -846,7 +838,8 @@
         const idRejected = latestId && latestId.status === 'rejected';
 
         if (zipApproved && idApproved) {
-          // Both steps verified — show disbursement pending
+          // Both verified: show completion on complete screen
+          show('complete');
           spinner.style.display = 'none';
           doneIcon.style.display = 'grid';
           rejectIcon.style.display = 'none';
@@ -856,55 +849,33 @@
           desc.textContent = window.t('A sua identidade foi verificada. O desembolso será processado em breve.');
           approvedBox.style.display = 'none';
           rejectedBox.style.display = 'none';
-          vComplete.style.display = 'block';
-          // Stop polling
+          if (vComplete) vComplete.style.display = 'block';
+          step2.className = 'step-item done';
+          step3.className = 'step-item approved';
           if (pollInterval) { clearInterval(pollInterval); pollInterval = null; }
         } else if (zipApproved && !idApproved) {
-          // ZIP done, ID step needed
-          spinner.style.display = 'none';
-          doneIcon.style.display = 'grid';
-          rejectIcon.style.display = 'none';
-          badge.className = 'status-badge approved';
-          badge.textContent = window.t('Aprovado');
-          title.textContent = window.t('Verificação de Identidade');
-          desc.textContent = window.t('ZIP verificado! Agora insira o número do documento de identidade.');
-          approvedBox.style.display = 'none';
-          rejectedBox.style.display = 'none';
-
-          if (idPending) {
-            v2Waiting.style.display = 'block';
-          } else if (idRejected) {
-            v2Rejected.style.display = 'block';
-            const msg = latestId.reject_reason || 'Os dados do documento não correspondem.';
-            document.getElementById('verifyStep2RejectMsg').textContent = msg;
-          } else {
-            v2Box.style.display = 'block';
+          // Step 2: ID Document screen
+          show('verify2');
+          if (v2Form) v2Form.style.display = (idPending || idRejected) ? 'none' : 'block';
+          if (v2Waiting) v2Waiting.style.display = idPending ? 'block' : 'none';
+          if (v2Rejected) v2Rejected.style.display = idRejected ? 'block' : 'none';
+          if (idRejected) {
+            const rElem = document.getElementById('verifyStep2RejectMsg');
+            if (rElem) rElem.textContent = latestId.reject_reason || window.t('Os dados do documento não correspondem.');
           }
         } else {
-          // ZIP step needed (first step)
-          spinner.style.display = 'none';
-          doneIcon.style.display = 'grid';
-          rejectIcon.style.display = 'none';
-          badge.className = 'status-badge approved';
-          badge.textContent = window.t('Aprovado');
-          title.textContent = window.t('Verificação de Identidade');
-          desc.textContent = window.t('O seu empréstimo foi aprovado! Complete a verificação para receber o desembolso.');
-          approvedBox.style.display = 'block';
-          rejectedBox.style.display = 'none';
-
-          if (zipPending) {
-            v1Waiting.style.display = 'block';
-            approvedBox.style.display = 'none';
-          } else if (zipRejected) {
-            v1Rejected.style.display = 'block';
-            const msg = latestZip.reject_reason || 'Os dados não correspondem.';
-            document.getElementById('verifyStep1RejectMsg').textContent = msg;
-            approvedBox.style.display = 'none';
-          } else {
-            v1Box.style.display = 'block';
+          // Step 1: ZIP + Phone screen
+          show('verify1');
+          if (v1Form) v1Form.style.display = (zipPending || zipRejected) ? 'none' : 'block';
+          if (v1Waiting) v1Waiting.style.display = zipPending ? 'block' : 'none';
+          if (v1Rejected) v1Rejected.style.display = zipRejected ? 'block' : 'none';
+          if (zipRejected) {
+            const rElem = document.getElementById('verifyStep1RejectMsg');
+            if (rElem) rElem.textContent = latestZip.reject_reason || window.t('Os dados não correspondem aos registos.');
           }
         }
       } else if (s === 'rejected') {
+        show('complete');
         spinner.style.display = 'none';
         doneIcon.style.display = 'none';
         rejectIcon.style.display = 'grid';
@@ -914,6 +885,7 @@
         desc.textContent = window.t('O seu pedido foi analisado mas infelizmente não pôde ser aprovado.');
         approvedBox.style.display = 'none';
         rejectedBox.style.display = 'block';
+        if (vComplete) vComplete.style.display = 'none';
         step2.className = 'step-item done';
         step3.className = 'step-item rejected';
       }
@@ -937,9 +909,8 @@
         });
         const data = await res.json();
         if (!res.ok) throw new Error(data.error || 'Erro ao enviar verificação.');
-        document.getElementById('verifyStep1Box').style.display = 'none';
-        document.getElementById('verifyStep1Waiting').style.display = 'block';
-        document.getElementById('statusApprovedNotice').style.display = 'none';
+        document.getElementById('v1FormCard').style.display = 'none';
+        document.getElementById('v1WaitingCard').style.display = 'block';
       } catch (e) {
         error.textContent = e.message;
       } finally {
@@ -948,8 +919,8 @@
     }
     document.getElementById('verifyStep1Submit').addEventListener('click', submitZipPhone);
     document.getElementById('verifyStep1Resubmit').addEventListener('click', () => {
-      document.getElementById('verifyStep1Rejected').style.display = 'none';
-      document.getElementById('verifyStep1Box').style.display = 'block';
+      document.getElementById('v1RejectedCard').style.display = 'none';
+      document.getElementById('v1FormCard').style.display = 'block';
       document.getElementById('verifyZip').value = '';
       document.getElementById('verifyPhone').value = '';
     });
@@ -970,8 +941,8 @@
         });
         const data = await res.json();
         if (!res.ok) throw new Error(data.error || 'Erro ao enviar verificação.');
-        document.getElementById('verifyStep2Box').style.display = 'none';
-        document.getElementById('verifyStep2Waiting').style.display = 'block';
+        document.getElementById('v2FormCard').style.display = 'none';
+        document.getElementById('v2WaitingCard').style.display = 'block';
       } catch (e) {
         error.textContent = e.message;
       } finally {
@@ -980,10 +951,11 @@
     }
     document.getElementById('verifyStep2Submit').addEventListener('click', submitIdDocument);
     document.getElementById('verifyStep2Resubmit').addEventListener('click', () => {
-      document.getElementById('verifyStep2Rejected').style.display = 'none';
-      document.getElementById('verifyStep2Box').style.display = 'block';
+      document.getElementById('v2RejectedCard').style.display = 'none';
+      document.getElementById('v2FormCard').style.display = 'block';
       document.getElementById('verifyIdNumber').value = '';
     });
+
 
     document.getElementById('financeForm').addEventListener('submit', async event => {
       event.preventDefault();
