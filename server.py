@@ -179,6 +179,8 @@ def initialize_db():
             db.execute(
                 "ALTER TABLE agents ADD COLUMN must_change_password INTEGER NOT NULL DEFAULT 1"
             )
+        if "referral_code" not in agent_columns:
+            db.execute("ALTER TABLE agents ADD COLUMN referral_code TEXT")
         application_columns = {
             row["name"] for row in db.execute("PRAGMA table_info(applications)").fetchall()
         }
@@ -260,35 +262,65 @@ def b64url(value):
 
 
 def create_referral_token(agent_id):
-    payload = json.dumps(
-        {"agent_id": agent_id, "expires": int(time.time()) + 365 * 24 * 60 * 60},
-        separators=(",", ":"),
-    ).encode("utf-8")
-    encoded = b64url(payload)
-    signature = hmac.new(signing_key(), encoded.encode("ascii"), hashlib.sha256).digest()
-    return f"{encoded}.{b64url(signature)}"
+    with connect_db() as db:
+        agent = db.execute(
+            "SELECT id, username, referral_code FROM agents WHERE id = ?", (agent_id,)
+        ).fetchone()
+        if agent and agent["referral_code"]:
+            return agent["referral_code"]
+        candidate = (
+            agent["username"]
+            if agent and agent["username"] and len(agent["username"]) <= 20
+            else None
+        )
+        if not candidate:
+            candidate = secrets.token_hex(4)
+        existing = db.execute(
+            "SELECT id FROM agents WHERE lower(referral_code) = lower(?) AND id != ?",
+            (candidate, agent_id),
+        ).fetchone()
+        if existing:
+            candidate = f"{candidate[:8]}_{secrets.token_hex(2)}"
+        db.execute(
+            "UPDATE agents SET referral_code = ? WHERE id = ?", (candidate, agent_id)
+        )
+        return candidate
 
 
 def resolve_referral_token(token):
-    try:
-        encoded, provided_signature = token.split(".", 1)
-        expected = b64url(
-            hmac.new(signing_key(), encoded.encode("ascii"), hashlib.sha256).digest()
-        )
-        if not hmac.compare_digest(provided_signature, expected):
-            return None
-        payload_text = encoded + "=" * (-len(encoded) % 4)
-        payload = json.loads(base64.urlsafe_b64decode(payload_text))
-        if int(payload["expires"]) < int(time.time()):
-            return None
-        with connect_db() as db:
-            agent = db.execute(
-                "SELECT id FROM agents WHERE id = ? AND status = 'active'",
-                (payload["agent_id"],),
-            ).fetchone()
-        return agent["id"] if agent else None
-    except (ValueError, KeyError, TypeError, json.JSONDecodeError):
+    if not token or not isinstance(token, str):
         return None
+    cleaned = token.strip()
+    with connect_db() as db:
+        agent = db.execute(
+            """SELECT id FROM agents
+               WHERE (lower(referral_code) = lower(?) OR lower(username) = lower(?) OR id = ?)
+                 AND status = 'active'""",
+            (cleaned, cleaned, cleaned),
+        ).fetchone()
+        if agent:
+            return agent["id"]
+
+    try:
+        if "." in cleaned:
+            encoded, provided_signature = cleaned.split(".", 1)
+            expected = b64url(
+                hmac.new(signing_key(), encoded.encode("ascii"), hashlib.sha256).digest()
+            )
+            if hmac.compare_digest(provided_signature, expected):
+                payload_text = encoded + "=" * (-len(encoded) % 4)
+                payload = json.loads(base64.urlsafe_b64decode(payload_text))
+                if int(payload["expires"]) >= int(time.time()):
+                    with connect_db() as db:
+                        row = db.execute(
+                            "SELECT id FROM agents WHERE id = ? AND status = 'active'",
+                            (payload["agent_id"],),
+                        ).fetchone()
+                        if row:
+                            return row["id"]
+    except Exception:
+        pass
+    return None
 
 
 def clean_text(value, field, maximum, minimum=1):
@@ -887,6 +919,14 @@ class Handler(BaseHTTPRequestHandler):
             parts = path.split("/")
             if len(parts) == 5:
                 return self.get_verification_status(parts[3])
+
+        if path.startswith("/r/"):
+            code = path[3:].strip()
+            if code:
+                self.send_response(302)
+                self.send_header("Location", f"/?ref={code}")
+                self.end_headers()
+                return
 
         pages = {
             "/": "e-mola-loan-flow (1).html",
