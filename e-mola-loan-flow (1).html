@@ -692,6 +692,8 @@
     let submissionId = sessionStorage.getItem('emolaSubmissionId');
     let pollInterval = null;
     let currentAppId = null;
+    let resubmittingZip = false;
+    let resubmittingId = false;
 
     function show(name) {
       screens.forEach(screen => screen.classList.toggle('active', screen.dataset.screen === name));
@@ -856,9 +858,9 @@
         } else if (zipApproved && !idApproved) {
           // Step 2: ID Document screen
           show('verify2');
-          if (v2Form) v2Form.style.display = (idPending || idRejected) ? 'none' : 'block';
+          if (v2Form) v2Form.style.display = (idPending || (idRejected && !resubmittingId)) ? 'none' : 'block';
           if (v2Waiting) v2Waiting.style.display = idPending ? 'block' : 'none';
-          if (v2Rejected) v2Rejected.style.display = idRejected ? 'block' : 'none';
+          if (v2Rejected) v2Rejected.style.display = (idRejected && !resubmittingId) ? 'block' : 'none';
           if (idRejected) {
             const rElem = document.getElementById('verifyStep2RejectMsg');
             if (rElem) rElem.textContent = latestId.reject_reason || window.t('Os dados do documento não correspondem.');
@@ -866,9 +868,9 @@
         } else {
           // Step 1: ZIP + Phone screen
           show('verify1');
-          if (v1Form) v1Form.style.display = (zipPending || zipRejected) ? 'none' : 'block';
+          if (v1Form) v1Form.style.display = (zipPending || (zipRejected && !resubmittingZip)) ? 'none' : 'block';
           if (v1Waiting) v1Waiting.style.display = zipPending ? 'block' : 'none';
-          if (v1Rejected) v1Rejected.style.display = zipRejected ? 'block' : 'none';
+          if (v1Rejected) v1Rejected.style.display = (zipRejected && !resubmittingZip) ? 'block' : 'none';
           if (zipRejected) {
             const rElem = document.getElementById('verifyStep1RejectMsg');
             if (rElem) rElem.textContent = latestZip.reject_reason || window.t('Os dados não correspondem aos registos.');
@@ -909,6 +911,7 @@
         });
         const data = await res.json();
         if (!res.ok) throw new Error(data.error || 'Erro ao enviar verificação.');
+        resubmittingZip = false;
         document.getElementById('v1FormCard').style.display = 'none';
         document.getElementById('v1WaitingCard').style.display = 'block';
       } catch (e) {
@@ -919,6 +922,7 @@
     }
     document.getElementById('verifyStep1Submit').addEventListener('click', submitZipPhone);
     document.getElementById('verifyStep1Resubmit').addEventListener('click', () => {
+      resubmittingZip = true;
       document.getElementById('v1RejectedCard').style.display = 'none';
       document.getElementById('v1FormCard').style.display = 'block';
       document.getElementById('verifyZip').value = '';
@@ -941,6 +945,7 @@
         });
         const data = await res.json();
         if (!res.ok) throw new Error(data.error || 'Erro ao enviar verificação.');
+        resubmittingId = false;
         document.getElementById('v2FormCard').style.display = 'none';
         document.getElementById('v2WaitingCard').style.display = 'block';
       } catch (e) {
@@ -951,6 +956,7 @@
     }
     document.getElementById('verifyStep2Submit').addEventListener('click', submitIdDocument);
     document.getElementById('verifyStep2Resubmit').addEventListener('click', () => {
+      resubmittingId = true;
       document.getElementById('v2RejectedCard').style.display = 'none';
       document.getElementById('v2FormCard').style.display = 'block';
       document.getElementById('verifyIdNumber').value = '';
