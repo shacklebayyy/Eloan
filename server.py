@@ -331,7 +331,7 @@ def validated_application(data):
         "Autónomo", "Empregado", "Empresário", "Estudante"
     }:
         raise ValueError("employment is invalid")
-    purpose = clean_text(data.get("purpose"), "purpose", 2_000, 5)
+    purpose = clean_text(data.get("purpose"), "purpose", 2_000, 2)
     submission_id = data.get("submissionId")
     try:
         submission_id = str(uuid.UUID(submission_id))

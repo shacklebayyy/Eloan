@@ -723,7 +723,7 @@
       event.preventDefault();
       const purpose = document.getElementById('purpose');
       const error = document.getElementById('step1Error');
-      if (!purpose.value.trim()) { error.textContent = window.t('Descreva o propósito do empréstimo.'); purpose.focus(); return; }
+      if (!purpose.value.trim() || purpose.value.trim().length < 2) { error.textContent = window.t('Descreva o propósito do empréstimo.'); purpose.focus(); return; }
       error.textContent = ''; show('step2');
     });
 
