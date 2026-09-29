@@ -202,6 +202,111 @@ def initialize_db():
             "INSERT OR IGNORE INTO settings (key, value) VALUES ('signing_key', ?)",
             (secrets.token_urlsafe(48),),
         )
+        seed_agents(db)
+
+
+def seed_agents(db=None):
+    if db is None:
+        with connect_db() as connection:
+            seed_agents(connection)
+        return
+
+    agents_to_seed = []
+
+    # 1. Load from agents_seed.json if present
+    seed_file = os.environ.get("EMOLA_AGENTS_SEED_FILE")
+    if not seed_file:
+        seed_file = os.path.join(ROOT, "agents_seed.json")
+    if os.path.exists(seed_file):
+        try:
+            with open(seed_file, "r", encoding="utf-8") as f:
+                data = json.load(f)
+                if isinstance(data, list):
+                    agents_to_seed.extend(data)
+                elif isinstance(data, dict):
+                    agents_to_seed.append(data)
+        except Exception as e:
+            print(f"Warning: Failed to load agents_seed.json: {e}")
+
+    # 2. Load from EMOLA_SEED_AGENTS environment variable
+    env_seeds = os.environ.get("EMOLA_SEED_AGENTS", "").strip()
+    if env_seeds:
+        if env_seeds.startswith("[") or env_seeds.startswith("{"):
+            try:
+                parsed = json.loads(env_seeds)
+                if isinstance(parsed, list):
+                    agents_to_seed.extend(parsed)
+                elif isinstance(parsed, dict):
+                    agents_to_seed.append(parsed)
+            except Exception as e:
+                print(f"Warning: Failed to parse EMOLA_SEED_AGENTS as JSON: {e}")
+        else:
+            entries = [e.strip() for e in env_seeds.replace(",", ";").split(";") if e.strip()]
+            for entry in entries:
+                parts = [p.strip() for p in entry.split(":")]
+                if parts and parts[0]:
+                    agents_to_seed.append({
+                        "name": parts[0],
+                        "telegram_chat_id": parts[1] if len(parts) > 1 and parts[1] else None,
+                        "referral_code": parts[2] if len(parts) > 2 and parts[2] else parts[0],
+                        "email": parts[3] if len(parts) > 3 and parts[3] else None,
+                    })
+
+    # Process each agent
+    for entry in agents_to_seed:
+        if not isinstance(entry, dict):
+            continue
+        name = str(entry.get("display_name") or entry.get("name") or "").strip()
+        if not name:
+            continue
+        agent_id = str(entry.get("id") or "").strip() or None
+        username = str(entry.get("username") or name).strip().lower()
+        ref_code = str(entry.get("referral_code") or entry.get("referralCode") or name).strip()
+        chat_id = entry.get("telegram_chat_id") or entry.get("telegramChatId")
+        if chat_id is not None:
+            chat_id = str(chat_id).strip()
+            if not chat_id or not chat_id.lstrip("-").isdigit():
+                chat_id = None
+        email = str(entry.get("email") or "").strip() or None
+
+        try:
+            existing = None
+            if agent_id:
+                existing = db.execute("SELECT id FROM agents WHERE id = ?", (agent_id,)).fetchone()
+            if not existing and username:
+                existing = db.execute("SELECT id FROM agents WHERE lower(username) = lower(?)", (username,)).fetchone()
+            if not existing and ref_code:
+                existing = db.execute("SELECT id FROM agents WHERE lower(referral_code) = lower(?)", (ref_code,)).fetchone()
+            if not existing and name:
+                existing = db.execute("SELECT id FROM agents WHERE lower(display_name) = lower(?)", (name,)).fetchone()
+            if not existing and chat_id:
+                existing = db.execute("SELECT id FROM agents WHERE telegram_chat_id = ?", (chat_id,)).fetchone()
+
+            if existing:
+                db.execute(
+                    """UPDATE agents
+                       SET display_name = COALESCE(?, display_name),
+                           referral_code = COALESCE(?, referral_code),
+                           telegram_chat_id = COALESCE(?, telegram_chat_id),
+                           email = COALESCE(?, email),
+                           status = 'active'
+                       WHERE id = ?""",
+                    (name, ref_code, chat_id, email, existing["id"]),
+                )
+            else:
+                new_id = agent_id or str(uuid.uuid4())
+                token_hash = hashlib.sha256(secrets.token_bytes(32)).hexdigest()
+                db.execute(
+                    """INSERT INTO agents (
+                        id, display_name, access_token_hash, username, email,
+                        status, referral_code, telegram_chat_id
+                    ) VALUES (?, ?, ?, ?, ?, 'active', ?, ?)""",
+                    (new_id, name, token_hash, username, email, ref_code, chat_id),
+                )
+                print(f"[Seed] Successfully seeded agent: {name} (ref: {ref_code})")
+        except sqlite3.Error as e:
+            print(f"[Seed] Warning: Could not seed agent {name}: {e}")
+
 
 
 def valid_email_address(email):
