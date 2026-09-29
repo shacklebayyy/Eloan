@@ -637,6 +637,42 @@ class ReferralApiTests(unittest.TestCase):
         self.assertEqual(status, 400)
         self.assertIn("approved", err["error"])
 
+    def test_admin_message_agents(self):
+        with mock.patch.object(server, "telegram_bot_token", return_value="fake-token"):
+            with mock.patch.object(server, "send_telegram_message") as mock_send:
+                # 1. Test create agent with telegram chat sends welcome message with referral link
+                status, agent = self.request_json(
+                    "/api/admin/agents",
+                    {"displayName": "TG Agent", "telegramChatId": "88776655"},
+                    token=server.ADMIN_TOKEN,
+                )
+                self.assertEqual(status, 201)
+                self.assertTrue(mock_send.called)
+                mock_send.assert_any_call("88776655", mock.ANY)
+                welcome_text = mock_send.call_args[0][1]
+                self.assertIn(agent["referralUrl"], welcome_text)
+
+                # 2. Test send direct message to agent
+                mock_send.reset_mock()
+                status, res = self.request_json(
+                    "/api/admin/agents/message",
+                    {"target": agent["agentId"], "message": "Importante: novas regras."},
+                    token=server.ADMIN_TOKEN,
+                )
+                self.assertEqual(status, 200)
+                self.assertEqual(res["sent"], 1)
+                mock_send.assert_called_once_with("88776655", "Importante: novas regras.")
+
+                # 3. Test send broadcast to all agents
+                mock_send.reset_mock()
+                status, res = self.request_json(
+                    "/api/admin/agents/message",
+                    {"target": "all", "message": "Aviso geral para todos."},
+                    token=server.ADMIN_TOKEN,
+                )
+                self.assertEqual(status, 200)
+                self.assertGreaterEqual(res["sent"], 1)
+
 
 if __name__ == "__main__":
     unittest.main()

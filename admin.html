@@ -243,13 +243,49 @@
               <th>Telegram Chat ID</th>
               <th>Total Candidaturas</th>
               <th>Link de Referência</th>
+              <th>Ações</th>
             </tr>
           </thead>
           <tbody id="agentRows">
-            <tr><td colspan="5" style="text-align:center; color:var(--muted); padding:24px;">Insira o token de administrador acima para carregar os agentes.</td></tr>
+            <tr><td colspan="6" style="text-align:center; color:var(--muted); padding:24px;">Insira o token de administrador acima para carregar os agentes.</td></tr>
           </tbody>
         </table>
       </div>
+    </section>
+
+    <!-- 5. Send Message to Agents Card -->
+    <section class="section-card" id="agentMessageSection">
+      <h2>
+        <span>Enviar Mensagem aos Agentes (Telegram)</span>
+      </h2>
+      <p class="desc">Envie avisos, atualizações ou mensagens diretas para o Telegram de um agente específico ou faça uma transmissão geral para todos os agentes.</p>
+
+      <form id="sendMessageForm">
+        <div class="grid-2">
+          <div>
+            <label for="messageTarget">Destinatário *</label>
+            <select id="messageTarget" required>
+              <option value="all">📢 Todos os Agentes com Telegram (Transmissão Geral)</option>
+              <option value="custom">✏️ Chat ID Personalizado...</option>
+            </select>
+          </div>
+          <div id="customChatGroup" hidden>
+            <label for="customChatId">Chat ID do Destinatário *</label>
+            <input id="customChatId" placeholder="ex: 123456789" />
+          </div>
+        </div>
+
+        <div style="margin-top: 12px;">
+          <label for="agentMessageText">Mensagem *</label>
+          <textarea id="agentMessageText" rows="4" style="width:100%; min-height:90px; padding:10px 12px; border:1px solid var(--line); border-radius:6px; font-size:14px; font-family:inherit; resize:vertical; background:#fff;" placeholder="Digite a mensagem ou aviso que deseja enviar para o(s) agente(s)..." required></textarea>
+        </div>
+
+        <div style="margin-top: 16px; display:flex; align-items:center; gap:12px; flex-wrap:wrap;">
+          <button id="sendMessageBtn" type="submit">Enviar Mensagem via Telegram</button>
+          <span id="messageStatusMsg" class="success-msg"></span>
+          <span id="messageErrorMsg" class="error-msg" style="margin:0;"></span>
+        </div>
+      </form>
     </section>
   </main>
 
@@ -446,8 +482,8 @@
               <select class="stage-select" data-app-id="${app.id}">
                 <option value="pending" ${stage === 'pending' ? 'selected' : ''}>Pendente</option>
                 <option value="under_review" ${stage === 'under_review' ? 'selected' : ''}>Em Análise</option>
-                <option value="approved" ${stage === 'approved' ? 'selected' : ''}>Aprovar</option>
-                <option value="rejected" ${stage === 'rejected' ? 'selected' : ''}>Rejeitar</option>
+                <option value="approved" ${stage === 'approved' ? 'selected' : ''}>Approve Loan</option>
+                <option value="rejected" ${stage === 'rejected' ? 'selected' : ''}>Reject</option>
               </select>
             </td>
           `;
@@ -492,12 +528,34 @@
 
         if (data.agents.length === 0) {
           const tr = document.createElement('tr');
-          tr.innerHTML = `<td colspan="5" style="text-align:center; color:var(--muted); padding:20px;">Nenhum agente registado.</td>`;
+          tr.innerHTML = `<td colspan="6" style="text-align:center; color:var(--muted); padding:20px;">Nenhum agente registado.</td>`;
           tbody.appendChild(tr);
           return;
         }
 
+        // Update recipient select options
+        const targetSelect = document.getElementById('messageTarget');
+        const currentVal = targetSelect.value;
+        targetSelect.replaceChildren();
+
+        const optAll = document.createElement('option');
+        optAll.value = 'all';
+        optAll.textContent = '📢 Todos os Agentes com Telegram (Transmissão Geral)';
+        targetSelect.appendChild(optAll);
+
+        const optCustom = document.createElement('option');
+        optCustom.value = 'custom';
+        optCustom.textContent = '✏️ Chat ID Personalizado...';
+        targetSelect.appendChild(optCustom);
+
         data.agents.forEach(agent => {
+          if (agent.telegramChatId) {
+            const opt = document.createElement('option');
+            opt.value = agent.id;
+            opt.textContent = `👤 ${agent.displayName} (Chat: ${agent.telegramChatId})`;
+            targetSelect.appendChild(opt);
+          }
+
           const tr = document.createElement('tr');
           tr.innerHTML = `
             <td><strong>${agent.displayName}</strong></td>
@@ -506,13 +564,22 @@
             <td><strong>${agent.leadCount || 0}</strong></td>
             <td>
               <div style="display:flex; align-items:center; gap:6px;">
-                <input value="${agent.referralUrl}" readonly style="min-height:30px; padding:4px 8px; font-size:12px; max-width:260px;" />
+                <input value="${agent.referralUrl}" readonly style="min-height:30px; padding:4px 8px; font-size:12px; max-width:220px;" />
                 <button type="button" class="secondary small copy-agent-btn" data-url="${agent.referralUrl}">Copiar</button>
               </div>
+            </td>
+            <td>
+              ${agent.telegramChatId
+                ? `<button type="button" class="small direct-msg-btn" data-agent-id="${agent.id}" data-name="${agent.displayName}">✉️ Mensagem</button>`
+                : `<span style="color:var(--muted); font-size:12px;">Sem Telegram</span>`}
             </td>
           `;
           tbody.appendChild(tr);
         });
+
+        if (Array.from(targetSelect.options).some(o => o.value === currentVal)) {
+          targetSelect.value = currentVal;
+        }
 
         tbody.querySelectorAll('.copy-agent-btn').forEach(btn => {
           btn.addEventListener('click', async () => {
@@ -521,10 +588,66 @@
             setTimeout(() => btn.textContent = 'Copiar', 2000);
           });
         });
+
+        tbody.querySelectorAll('.direct-msg-btn').forEach(btn => {
+          btn.addEventListener('click', () => {
+            targetSelect.value = btn.dataset.agentId;
+            document.getElementById('customChatGroup').hidden = true;
+            document.getElementById('agentMessageSection').scrollIntoView({ behavior: 'smooth' });
+            document.getElementById('agentMessageText').focus();
+          });
+        });
       } catch (err) {
         console.error(err);
       }
     }
+
+    // 5. Send Message to Agents
+    const messageTargetSelect = document.getElementById('messageTarget');
+    const customChatGroup = document.getElementById('customChatGroup');
+    const customChatIdInput = document.getElementById('customChatId');
+
+    messageTargetSelect.addEventListener('change', () => {
+      const isCustom = messageTargetSelect.value === 'custom';
+      customChatGroup.hidden = !isCustom;
+      if (isCustom) customChatIdInput.focus();
+    });
+
+    document.getElementById('sendMessageForm').addEventListener('submit', async event => {
+      event.preventDefault();
+      const sendBtn = document.getElementById('sendMessageBtn');
+      const statusMsg = document.getElementById('messageStatusMsg');
+      const errorMsg = document.getElementById('messageErrorMsg');
+      const text = document.getElementById('agentMessageText').value.trim();
+      const target = messageTargetSelect.value;
+      const customChatId = customChatIdInput.value.trim();
+
+      statusMsg.textContent = '';
+      errorMsg.textContent = '';
+      sendBtn.disabled = true;
+
+      try {
+        const payload = {
+          target: target,
+          message: text,
+          chatId: customChatId
+        };
+        const response = await fetch('/api/admin/agents/message', {
+          method: 'POST',
+          headers: authHeaders(),
+          body: JSON.stringify(payload)
+        });
+        const data = await response.json();
+        if (!response.ok) throw new Error(data.error || 'Erro ao enviar mensagem.');
+        statusMsg.textContent = `✓ Mensagem enviada com sucesso para ${data.sent} destinatário(s)!`;
+        document.getElementById('agentMessageText').value = '';
+        setTimeout(() => statusMsg.textContent = '', 5000);
+      } catch (err) {
+        errorMsg.textContent = err.message;
+      } finally {
+        sendBtn.disabled = false;
+      }
+    });
 
     document.getElementById('refreshAppsBtn').addEventListener('click', loadApplications);
     document.getElementById('refreshAgentsBtn').addEventListener('click', loadAgents);
