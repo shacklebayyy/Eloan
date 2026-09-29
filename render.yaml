@@ -1,0 +1,11 @@
+services:
+  - type: web
+    name: eloan
+    env: python
+    buildCommand: ""
+    startCommand: "python server.py"
+    envVars:
+      - key: HOST
+        value: 0.0.0.0
+      - key: EMOLA_ADMIN_TOKEN
+        value: admin123
