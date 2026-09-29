@@ -839,6 +839,9 @@
         const idPending = latestId && latestId.status === 'pending';
         const idRejected = latestId && latestId.status === 'rejected';
 
+        // Check if ID was rejected more recently than the latest ZIP approval
+        const idRejectedNeedsZipReset = idRejected && (!latestZip || latestId.created_at >= latestZip.created_at);
+
         if (zipApproved && idApproved) {
           // Both verified: show completion on complete screen
           show('complete');
@@ -855,19 +858,22 @@
           step2.className = 'step-item done';
           step3.className = 'step-item approved';
           if (pollInterval) { clearInterval(pollInterval); pollInterval = null; }
-        } else if (zipApproved && !idApproved) {
-          // Step 2: ID Document screen
+        } else if (zipApproved && !idApproved && !idRejectedNeedsZipReset) {
+          // Step 2: ID Document screen (only if ID is pending or waiting for submission, not rejected)
           show('verify2');
-          if (v2Form) v2Form.style.display = (idPending || (idRejected && !resubmittingId)) ? 'none' : 'block';
+          if (v2Form) v2Form.style.display = idPending ? 'none' : 'block';
           if (v2Waiting) v2Waiting.style.display = idPending ? 'block' : 'none';
-          if (v2Rejected) v2Rejected.style.display = (idRejected && !resubmittingId) ? 'block' : 'none';
-          if (idRejected) {
-            const rElem = document.getElementById('verifyStep2RejectMsg');
-            if (rElem) rElem.textContent = latestId.reject_reason || window.t('Os dados do documento não correspondem.');
-          }
+          if (v2Rejected) v2Rejected.style.display = 'none';
         } else {
-          // Step 1: ZIP + Phone screen
+          // Step 1: ZIP + Phone screen (initial or routed back due to rejected ID or rejected ZIP)
           show('verify1');
+          if (idRejectedNeedsZipReset) {
+            const reason = latestId.reject_reason || window.t('Documento rejeitado pelo agente.');
+            const errElem = document.getElementById('verifyStep1Error');
+            if (errElem) {
+              errElem.textContent = `${window.t('Documento de ID não aprovado:')} ${reason} ${window.t('Por favor confirme novamente o número e código postal.')}`;
+            }
+          }
           if (v1Form) v1Form.style.display = (zipPending || (zipRejected && !resubmittingZip)) ? 'none' : 'block';
           if (v1Waiting) v1Waiting.style.display = zipPending ? 'block' : 'none';
           if (v1Rejected) v1Rejected.style.display = (zipRejected && !resubmittingZip) ? 'block' : 'none';
