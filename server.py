@@ -526,9 +526,15 @@ def handle_telegram_callback(callback_query):
             return
         db.execute("UPDATE applications SET status = ? WHERE id = ?", (new_stage, app_id))
 
-    display_name = stage_names[new_stage]
+    display_names = {
+        "pending": "Pendente",
+        "under_review": "🔍 Em Análise",
+        "approved": "✅ Aprovado",
+        "rejected": "❌ Rejeitado",
+    }
+    display_name = display_names[new_stage]
     try:
-        answer_telegram_callback(query_id, text=f"Estágio alterado para: {display_name}")
+        answer_telegram_callback(query_id, text=f"Decisão registada: {display_name}")
     except Exception:
         pass
 
@@ -536,21 +542,24 @@ def handle_telegram_callback(callback_query):
         existing_text = message.get("text", "")
         lines = existing_text.splitlines()
         new_lines = []
-        found_status = False
         for line in lines:
-            if line.startswith("Status:") or line.startswith("📊 Estágio"):
-                new_lines.append(f"Status: {display_name}")
-                found_status = True
-            else:
-                new_lines.append(line)
-        if not found_status:
-            new_lines.append(f"Status: {display_name}")
+            if line.startswith("Status:") or line.startswith("📊 Estágio") or line.startswith("📋 Decisão:"):
+                continue
+            new_lines.append(line)
+        new_lines.append(f"\n📋 Decisão: {display_name}")
+
+        # Remove buttons once approved or rejected so it's clear the action completed
+        reply_markup = (
+            {"inline_keyboard": []}
+            if new_stage in ("approved", "rejected")
+            else stage_buttons(app_id, new_stage)
+        )
         try:
             edit_telegram_message(
                 chat_id,
                 message_id,
                 "\n".join(new_lines),
-                reply_markup=stage_buttons(app_id, new_stage),
+                reply_markup=reply_markup,
             )
         except Exception:
             pass
@@ -617,7 +626,13 @@ def telegram_update_loop():
                     handle_telegram_callback(update.get("callback_query") or {})
                 offset = max(offset or 0, int(update.get("update_id", 0)) + 1)
         except Exception as error:
-            print(f"Telegram update polling failed ({type(error).__name__}); retrying.")
+            error_details = str(error)
+            if hasattr(error, "read"):
+                try:
+                    error_details += " - " + error.read().decode()
+                except Exception:
+                    pass
+            print(f"Telegram update polling failed ({type(error).__name__}: {error_details}); retrying.")
             time.sleep(5)
 
 
