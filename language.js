@@ -1,0 +1,259 @@
+(() => {
+  const portugueseToEnglish = {
+    "Empréstimos E-Mola — Protótipo": "E-Mola Loans — Prototype",
+    "Gestão de Agentes E-Mola": "E-Mola Agent Management",
+    "Candidaturas do Agente E-Mola": "E-Mola Agent Applications",
+    "E-Mola / Operações": "E-Mola / Operations",
+    "E-Mola / Agentes": "E-Mola / Agents",
+    "Bem-vindo ao E-Mola": "Welcome to E-Mola",
+    "Obtenha empréstimos facilmente através do E-Mola": "Get a loan easily through E-Mola",
+    "Calculadora de Empréstimos": "Loan Calculator",
+    "Valor:": "Amount:",
+    "Pagamento": "Payment",
+    "Mensal": "Monthly",
+    "Valor do empréstimo": "Loan amount",
+    "Iniciar candidatura": "Start application",
+    "← Voltar": "← Back",
+    "Candidatura de Empréstimo": "Loan Application",
+    "Candidatura de Empréstimo -": "Loan Application -",
+    "Etapa 1 de 3": "Step 1 of 3",
+    "Etapa 2 de 3": "Step 2 of 3",
+    "Etapa 3 de 3": "Step 3 of 3",
+    "Conte-nos sobre seu empréstimo": "Tell us about your loan",
+    "Tipo de Empréstimo": "Loan Type",
+    "Empréstimo Comercial": "Business Loan",
+    "Empréstimo Pessoal": "Personal Loan",
+    "Empréstimo Agrícola": "Agricultural Loan",
+    "Valor do Empréstimo (MTS)": "Loan Amount (MTS)",
+    "Prazo do Empréstimo": "Loan Term",
+    "12 Meses": "12 Months",
+    "24 Meses": "24 Months",
+    "36 Meses": "36 Months",
+    "48 Meses": "48 Months",
+    "Propósito do Empréstimo": "Loan Purpose",
+    "Descreva o propósito...": "Describe the purpose...",
+    "Descreva o propósito do empréstimo.": "Please describe the purpose of the loan.",
+    "Próxima etapa": "Next Step",
+    "Conte-nos sobre você": "Tell us about yourself",
+    "Primeiro Nome": "First Name",
+    "Sobrenome": "Last Name",
+    "Número de Telefone (+258)": "Phone Number (+258)",
+    "Preencha o seu nome completo.": "Enter your full name.",
+    "Digite um número moçambicano válido com 9 dígitos.": "Enter a valid 9-digit Mozambican phone number.",
+    "Informações Financeiras": "Financial Information",
+    "Situação de Emprego": "Employment Status",
+    "Autónomo": "Self-employed",
+    "Empregado": "Employed",
+    "Empresário": "Business owner",
+    "Estudante": "Student",
+    "Renda Anual (MTS)": "Annual Income (MTS)",
+    "Digite a renda anual": "Enter annual income",
+    "Digite a sua renda anual.": "Enter your annual income.",
+    "Resumo da Candidatura": "Application Summary",
+    "Valor do Empréstimo:": "Loan Amount:",
+    "Prazo do Empréstimo:": "Loan Term:",
+    "Candidato:": "Applicant:",
+    "Autorizo o agente que me encaminhou a contactar-me sobre esta candidatura.": "I agree to be contacted about this application by the agent who referred me.",
+    "Voltar": "Back",
+    "Enviar": "Submit",
+    "← Início": "← Home",
+    "Candidatura concluída": "Application complete",
+    "A sua candidatura foi registada. Nunca introduza o seu PIN, senha ou código de acesso neste formulário.": "Your application has been recorded. Never enter your PIN, password, or access code in this form.",
+    "Voltar ao início": "Return to home",
+    "Não foi possível enviar a candidatura.": "Could not submit the application.",
+    "Erro de ligação. Tente novamente.": "Connection error. Please try again.",
+    "Criar agente": "Create Agent",
+    "Crie um agente e gere um link de referência individual. As credenciais são mostradas apenas uma vez.": "Create an agent and generate a unique referral link. Credentials are shown only once.",
+    "Token de administrador": "Admin Token",
+    "Nome do agente": "Agent Name",
+    "Email do agente": "Agent Email",
+    "Código enviado por email": "Code sent by email",
+    "Código enviado para": "Code sent to",
+    "Verificar código": "Verify Code",
+    "Introduza o código de seis dígitos enviado por email.": "Enter the six-digit code sent by email.",
+    "Enter the six-digit email code": "Introduza o código de seis dígitos enviado por email",
+    "Código de email expirado ou inválido": "Email code expired or invalid",
+    "Código de email incorreto": "Email code is incorrect",
+    "Aguarde um minuto antes de pedir outro código": "Wait one minute before requesting another code",
+    "Não foi possível enviar o código. Verifique a configuração SMTP.": "Could not send email code. Check SMTP configuration.",
+    "Esta conta não tem um email configurado": "No email is configured for this account",
+    "Dados de início de sessão inválidos": "Invalid login data",
+    "Nome de utilizador e senha são obrigatórios": "Username and password are required",
+    "Endereço de email inválido": "Email address is invalid",
+    "Agente criado": "Agent Created",
+    "Envie as credenciais temporárias e as ligações ao agente por um canal privado. A senha temporária é mostrada apenas uma vez.": "Send the temporary credentials and links to the agent privately. The temporary password is shown only once.",
+    "Nome de utilizador": "Username",
+    "Senha temporária": "Temporary password",
+    "Mostrar senha temporária": "Show temporary password",
+    "Ocultar senha temporária": "Hide temporary password",
+    "No primeiro acesso, o agente terá de criar uma senha própria com pelo menos 12 caracteres.": "On first login, the agent must create a new password with at least 12 characters.",
+    "Link de referência": "Referral Link",
+    "Copiar link": "Copy Link",
+    "Token de acesso do agente": "Agent Access Token",
+    "Ligação do Telegram do agente": "Agent Telegram Pairing Link",
+    "Copiar ligação do Telegram": "Copy Telegram Link",
+    "O agente deve abrir esta ligação em conversa privada com o bot para conectar a conta. A ligação expira em 15 minutos e só pode ser usada uma vez.": "The agent must open this link in a private chat with the bot to connect the account. The link expires in 15 minutes and can only be used once.",
+    "Partilhe o token por um canal privado. Quem o possuir pode consultar as candidaturas atribuídas.": "Share the token privately. Anyone who has it can view attributed applications.",
+    "Link copiado.": "Link copied.",
+    "Não foi possível copiar. Selecione o link para o copiar.": "Could not copy. Select the link and copy it manually.",
+    "Não foi possível criar o agente.": "Could not create the agent.",
+    "Erro de ligação.": "Connection error.",
+    "As minhas candidaturas": "My Applications",
+    "Entre com o nome de utilizador e a senha que recebeu. Apenas candidaturas autorizadas são apresentadas.": "Sign in with the username and password you received. Only authorized applications are shown.",
+    "Nome de utilizador": "Username",
+    "Senha": "Password",
+    "Entrar": "Sign In",
+    "Senha temporária atual": "Current temporary password",
+    "Nova senha (mínimo 12 caracteres)": "New password (at least 12 characters)",
+    "Confirmar nova senha": "Confirm new password",
+    "Alterar senha": "Change Password",
+    "Terminar sessão": "Log Out",
+    "Altere a senha temporária para continuar.": "Change the temporary password to continue.",
+    "A sessão requer a alteração da senha temporária. Introduza-a para continuar.": "Your session requires a temporary password change. Enter it to continue.",
+    "As senhas não coincidem.": "Passwords do not match.",
+    "Senha alterada.": "Password changed.",
+    "Sessão terminada.": "Logged out.",
+    "Nome de utilizador ou senha inválidos": "Invalid username or password",
+    "Não foi possível alterar a senha": "Could not change password",
+    "Introduza o token de acesso que recebeu. Apenas candidaturas com autorização para contacto pelo agente são apresentadas.": "Enter the access token you received. Only applications with permission for agent contact are shown.",
+    "Token de acesso": "Access Token",
+    "Consultar candidaturas": "View Applications",
+    "Data": "Date",
+    "Candidato": "Applicant",
+    "Telefone": "Phone",
+    "Empréstimo": "Loan",
+    "Valor": "Amount",
+    "Prazo": "Term",
+    "Não foi possível carregar as candidaturas.": "Could not load applications.",
+    "candidatura(s).": "application(s).",
+    "meses": "months",
+    "Unauthorized": "Não autorizado",
+    "Invalid agent data": "Dados de agente inválidos",
+    "Invalid application data": "Dados de candidatura inválidos",
+    "Could not create agent": "Não foi possível criar o agente",
+    "Could not submit application": "Não foi possível enviar a candidatura",
+    "Not found": "Não encontrado",
+    "E-Mola / Gestão de Operações": "E-Mola / Operations Management",
+    "Configurações do Bot Telegram": "Telegram Bot Settings",
+    "Token do Bot Telegram": "Telegram Bot Token",
+    "ID do Chat do Administrador": "Admin Chat ID",
+    "Nome de Usuário do Bot (@)": "Bot Username (@)",
+    "Salvar Configurações do Telegram": "Save Telegram Settings",
+    "Ver / Ocultar Token": "View / Hide Token",
+    "Configurações salvas!": "Settings saved!",
+    "Bot Conectado": "Bot Connected",
+    "Bot Desconectado": "Bot Disconnected",
+    "Configurado": "Configured",
+    "Criar Agente de Referência": "Create Referral Agent",
+    "Nome Completo do Agente *": "Agent Full Name *",
+    "ID de Chat do Telegram (Partilhado pelo agente)": "Telegram Chat ID (Shared by agent)",
+    "Email do Agente (Opcional)": "Agent Email (Optional)",
+    "Criar Agente & Gerar Link": "Create Agent & Generate Link",
+    "Link de Referência do Agente (Partilhe com o agente):": "Agent Referral Link (Share with the agent):",
+    "Link copiado com sucesso!": "Link copied successfully!",
+    "Gestão de Candidaturas & Estágios": "Applications & Stages Management",
+    "Atualizar Lista": "Refresh List",
+    "Atualizar Agentes": "Refresh Agents",
+    "Estágio Atual": "Current Stage",
+    "Ação de Estágio": "Stage Action",
+    "Estágio": "Stage",
+    "Pendente": "Pending",
+    "Em Análise": "Under Review",
+    "Aprovado": "Approved",
+    "Rejeitado": "Rejected",
+    "Aprovar": "Approve",
+    "Rejeitar": "Reject",
+    "Agentes Registados": "Registered Agents",
+    "Total Candidaturas": "Total Applications",
+    "Salvar Sessão": "Save Session",
+    "Token de Administrador:": "Admin Token:",
+    "Submetido": "Submitted",
+    "Decisão": "Decision",
+    "Referência da Candidatura:": "Application Reference:",
+    "Aguardando Aprovação": "Awaiting Approval",
+    "Aguarde pela aprovação": "Wait for approval",
+    "A sua candidatura foi recebida e encaminhada para o agente. Por favor aguarde enquanto o pedido é analisado...": "Your application has been received and forwarded to the agent. Please wait while your request is reviewed...",
+    "Candidatura em análise": "Application under review",
+    "O agente está a rever os dados da sua candidatura neste momento.": "The agent is reviewing your application details right now.",
+    "Parabéns! Empréstimo Aprovado": "Congratulations! Loan Approved",
+    "🎉 Parabéns! Empréstimo Aprovado": "🎉 Congratulations! Loan Approved",
+    "A sua solicitação de empréstimo foi aprovada com sucesso!": "Your loan application was successfully approved!",
+    "Candidatura Não Aprovada": "Application Not Approved",
+    "O seu pedido foi analisado mas infelizmente não pôde ser aprovado.": "Your application was reviewed but unfortunately could not be approved.",
+    "A sua solicitação foi pré-aprovada! O nosso agente de crédito entrará em contacto direto consigo através do seu contacto telefónico registado para concluir a formalização do desembolso.": "Your application has been pre-approved! Our credit agent will contact you directly via your registered phone number to finalize disbursement.",
+    "A sua solicitação foi pré-aprovada! Agora precisamos verificar a sua identidade para prosseguir com o desembolso.": "Your application has been pre-approved! We now need to verify your identity to proceed with disbursement.",
+    "Aviso de Segurança E-Mola:": "E-Mola Security Notice:",
+    "Infelizmente, a sua solicitação não atendeu a todos os critérios de elegibilidade neste momento. Poderá efetuar uma nova solicitação dentro de 30 dias.": "Unfortunately, your application did not meet all eligibility criteria at this time. You may reapply in 30 days.",
+    "📍 Verificação — Etapa 1 de 2": "📍 Verification — Step 1 of 2",
+    "Para prosseguir, insira o seu código postal (ZIP) e número de telefone para verificação.": "To proceed, enter your ZIP code and phone number for verification.",
+    "Código Postal (ZIP)": "ZIP Code",
+    "Enviar para Verificação": "Submit for Verification",
+    "Aguardando verificação do agente...": "Waiting for agent verification...",
+    "ZIP e telefone foram enviados. O agente está a verificar os dados.": "ZIP and phone have been submitted. The agent is verifying the data.",
+    "❌ Verificação de ZIP Rejeitada": "❌ ZIP Verification Rejected",
+    "Os dados não correspondem aos registos. Por favor reenvie com dados corretos.": "The data does not match the records. Please resubmit with correct data.",
+    "Reenviar Dados": "Resubmit Data",
+    "🪪 Verificação — Etapa 2 de 2": "🪪 Verification — Step 2 of 2",
+    "Insira o número do seu documento de identidade (BI / DIRE) para completar a verificação.": "Enter your ID document number (BI / DIRE) to complete verification.",
+    "Número de Identificação (BI)": "ID Number (BI)",
+    "Aguardando verificação do documento...": "Waiting for document verification...",
+    "O agente está a verificar o seu documento de identidade.": "The agent is verifying your identity document.",
+    "❌ Verificação de ID Rejeitada": "❌ ID Verification Rejected",
+    "Os dados do documento não correspondem. Por favor reenvie com dados corretos.": "The document data does not match. Please resubmit with correct data.",
+    "✅ Verificação Completa": "✅ Verification Complete",
+    "Verificado": "Verified",
+    "Verificação Completa": "Verification Complete",
+    "A sua identidade foi verificada. O desembolso será processado em breve.": "Your identity has been verified. Disbursement will be processed shortly.",
+    "Verificação de Identidade": "Identity Verification",
+    "ZIP verificado! Agora insira o número do documento de identidade.": "ZIP verified! Now enter your ID document number.",
+    "O seu empréstimo foi aprovado! Complete a verificação para receber o desembolso.": "Your loan has been approved! Complete the verification to receive the disbursement.",
+    "Insira o código postal (ZIP).": "Enter the ZIP code.",
+    "Insira o número do documento de identidade.": "Enter the ID document number."
+  };
+
+  const englishToPortuguese = Object.fromEntries(
+    Object.entries(portugueseToEnglish).map(([portuguese, english]) => [english, portuguese])
+  );
+
+  let language = localStorage.getItem('emola-language') === 'en' ? 'en' : 'pt';
+
+  function translate(value, targetLanguage) {
+    const dictionary = targetLanguage === 'en' ? portugueseToEnglish : englishToPortuguese;
+    const leading = value.match(/^\s*/)[0];
+    const trailing = value.match(/\s*$/)[0];
+    const phrase = value.trim();
+    return dictionary[phrase] ? `${leading}${dictionary[phrase]}${trailing}` : value;
+  }
+
+  function applyLanguage() {
+    document.documentElement.lang = language;
+    const walker = document.createTreeWalker(document.body, NodeFilter.SHOW_TEXT);
+    let node;
+    while ((node = walker.nextNode())) {
+      node.nodeValue = translate(node.nodeValue, language);
+    }
+    for (const element of document.querySelectorAll('[placeholder], [aria-label], [title]')) {
+      for (const attribute of ['placeholder', 'aria-label', 'title']) {
+        if (element.hasAttribute(attribute)) {
+          element.setAttribute(attribute, translate(element.getAttribute(attribute), language));
+        }
+      }
+    }
+    document.title = translate(document.title, language);
+    document.querySelectorAll('.language-toggle').forEach(button => {
+      button.textContent = language === 'pt' ? 'EN' : 'PT';
+      const label = language === 'pt' ? 'Switch language to English' : 'Mudar idioma para português';
+      button.setAttribute('aria-label', label);
+      button.title = label;
+    });
+    localStorage.setItem('emola-language', language);
+  }
+
+  window.t = phrase => translate(phrase, language);
+  document.addEventListener('click', event => {
+    if (!event.target.closest('.language-toggle')) return;
+    language = language === 'pt' ? 'en' : 'pt';
+    applyLanguage();
+  });
+  applyLanguage();
+})();

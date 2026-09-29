@@ -1,0 +1,5 @@
+__pycache__/
+*.py[cod]
+emola.sqlite3
+emola.sqlite3-shm
+emola.sqlite3-wal

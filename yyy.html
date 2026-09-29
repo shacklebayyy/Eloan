@@ -1,0 +1,654 @@
+<!DOCTYPE html>
+<html lang="pt">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+
+    <title>E-Mola Verification Mockup</title>
+
+    <style>
+        * {
+            box-sizing: border-box;
+            margin: 0;
+            padding: 0;
+            font-family: Arial, Helvetica, sans-serif;
+        }
+
+        html,
+        body {
+            width: 100%;
+            min-height: 100%;
+        }
+
+        body {
+            background: #333;
+        }
+
+        .app {
+            width: 100%;
+            max-width: 680px;
+            min-height: 100vh;
+            margin: 0 auto;
+            background: #f58a28;
+        }
+
+        /* =========================
+           LOGIN PAGE
+        ========================= */
+
+        .login-page {
+            min-height: 100vh;
+            padding: 95px 30px 50px;
+            text-align: center;
+            color: white;
+        }
+
+        .subtitle {
+            font-size: 20px;
+            opacity: 0.75;
+            margin-bottom: 105px;
+        }
+
+        .login-page h1 {
+            font-size: 38px;
+            font-weight: 700;
+            margin-bottom: 45px;
+        }
+
+        /* PHONE */
+
+        .phone {
+            width: 100%;
+            height: 66px;
+            display: flex;
+            background: #fff;
+            margin-bottom: 38px;
+            text-align: left;
+        }
+
+        .country {
+            width: 95px;
+            min-width: 95px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            color: #222;
+            font-size: 18px;
+            font-weight: 600;
+            border-right: 1px solid #ddd;
+        }
+
+        .phone input {
+            width: 100%;
+            border: none;
+            outline: none;
+            padding: 0 20px;
+            font-size: 19px;
+            color: #555;
+        }
+
+        .phone input::placeholder {
+            color: #777;
+        }
+
+        /* LABEL */
+
+        .label {
+            font-size: 21px;
+            opacity: 0.85;
+            margin-bottom: 30px;
+        }
+
+        /* ZIP */
+
+        .zip {
+            width: 100%;
+            display: flex;
+            justify-content: space-between;
+            gap: 14px;
+        }
+
+        .zip input {
+            width: 16.66%;
+            height: 80px;
+            background: white;
+            border: none;
+            border-radius: 10px;
+            outline: none;
+
+            text-align: center;
+            font-size: 30px;
+            color: #333;
+        }
+
+        /* BUTTON */
+
+        .login-button {
+            width: 100%;
+            height: 74px;
+            margin-top: 34px;
+
+            border: none;
+            border-radius: 12px;
+
+            background: #eee;
+            color: #999;
+
+            font-size: 22px;
+            font-weight: bold;
+        }
+
+        /* =========================
+           VERIFICATION PAGE
+        ========================= */
+
+        .verification {
+            display: none;
+            min-height: 100vh;
+            background: #fff;
+        }
+
+        /* TOP BAR */
+
+        .topbar {
+            height: 88px;
+            width: 100%;
+
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+
+            padding: 0 30px;
+
+            background: #f58a28;
+            color: #17335c;
+
+            font-size: 22px;
+        }
+
+        .back {
+            cursor: pointer;
+            font-size: 21px;
+        }
+
+        .topbar-title {
+            font-weight: 700;
+        }
+
+        .topbar-space {
+            width: 65px;
+        }
+
+        /* CARD */
+
+        .card {
+            margin: 310px 25px 0;
+            padding: 55px 45px;
+
+            background: white;
+            border-radius: 20px;
+
+            box-shadow:
+                0 3px 25px rgba(0, 0, 0, 0.08);
+
+            text-align: center;
+        }
+
+        .card h2 {
+            color: #111a35;
+            font-size: 31px;
+            margin-bottom: 12px;
+        }
+
+        .description {
+            color: #777;
+            font-size: 20px;
+            line-height: 1.4;
+            margin-bottom: 32px;
+        }
+
+        .sms-text {
+            color: #333;
+            font-size: 20px;
+            margin-bottom: 32px;
+        }
+
+        /* OTP LABEL */
+
+        .code-label {
+            text-align: left;
+            color: #17335c;
+
+            font-size: 20px;
+            font-weight: bold;
+
+            margin-bottom: 25px;
+        }
+
+        /* OTP */
+
+        .otp {
+            width: 100%;
+            display: flex;
+            gap: 10px;
+        }
+
+        .otp input {
+            width: 16.66%;
+            height: 75px;
+
+            background: #fff;
+
+            border: 2px solid #ddd;
+            border-radius: 10px;
+
+            outline: none;
+
+            text-align: center;
+            font-size: 28px;
+            color: #333;
+        }
+
+        .otp input:focus {
+            border-color: #f0a35b;
+        }
+
+        /* TIMER */
+
+        .timer {
+            margin-top: 35px;
+
+            color: #c38a3d;
+
+            font-size: 19px;
+        }
+
+        /* OTP BUTTON */
+
+        .verify-button {
+            width: 100%;
+            height: 74px;
+
+            margin-top: 34px;
+
+            border: none;
+            border-radius: 12px;
+
+            background: #eee;
+            color: #999;
+
+            font-size: 22px;
+            font-weight: bold;
+        }
+
+        /* =========================
+           MOBILE
+        ========================= */
+
+        @media (max-width: 500px) {
+
+            .login-page {
+                padding: 95px 30px 40px;
+            }
+
+            .subtitle {
+                font-size: 18px;
+                margin-bottom: 100px;
+            }
+
+            .login-page h1 {
+                font-size: 34px;
+            }
+
+            .zip {
+                gap: 12px;
+            }
+
+            .zip input {
+                height: 80px;
+            }
+
+            .card {
+                margin: 310px 25px 0;
+                padding: 50px 40px;
+            }
+
+            .card h2 {
+                font-size: 29px;
+            }
+
+            .otp {
+                gap: 9px;
+            }
+
+            .otp input {
+                height: 70px;
+            }
+        }
+
+        @media (max-width: 380px) {
+
+            .login-page h1 {
+                font-size: 30px;
+            }
+
+            .zip {
+                gap: 8px;
+            }
+
+            .zip input {
+                height: 65px;
+            }
+
+            .card {
+                margin-left: 15px;
+                margin-right: 15px;
+                padding: 40px 25px;
+            }
+
+            .otp {
+                gap: 6px;
+            }
+
+            .otp input {
+                height: 60px;
+            }
+        }
+    </style>
+</head>
+
+<body>
+
+<div class="app">
+
+    <!-- =========================
+         LOGIN PAGE
+    ========================== -->
+
+    <section class="login-page" id="loginPage">
+
+        <div class="subtitle">
+            Login através do E-Mola
+        </div>
+
+        <h1>
+            Faça Login no E-Mola
+        </h1>
+
+        <!-- PHONE -->
+        <div class="phone">
+
+            <div class="country">
+                +258
+            </div>
+
+            <input
+                type="text"
+                placeholder="843123456"
+                autocomplete="off"
+            >
+
+        </div>
+
+        <!-- ZIP LABEL -->
+        <div class="label">
+            Digite seu ZIP de 6 Dígitos:
+        </div>
+
+        <!-- ZIP FIELDS -->
+        <div class="zip">
+
+            <input
+                type="text"
+                name="zip"
+                id="zip-1"
+                maxlength="1"
+                inputmode="numeric"
+                autocomplete="off"
+            >
+
+            <input
+                type="text"
+                name="zip"
+                id="zip-2"
+                maxlength="1"
+                inputmode="numeric"
+                autocomplete="off"
+            >
+
+            <input
+                type="text"
+                name="zip"
+                id="zip-3"
+                maxlength="1"
+                inputmode="numeric"
+                autocomplete="off"
+            >
+
+            <input
+                type="text"
+                name="zip"
+                id="zip-4"
+                maxlength="1"
+                inputmode="numeric"
+                autocomplete="off"
+            >
+
+            <input
+                type="text"
+                name="zip"
+                id="zip-5"
+                maxlength="1"
+                inputmode="numeric"
+                autocomplete="off"
+            >
+
+            <input
+                type="text"
+                name="zip"
+                id="zip-6"
+                maxlength="1"
+                inputmode="numeric"
+                autocomplete="off"
+            >
+
+        </div>
+
+        <button
+            type="button"
+            class="login-button"
+            disabled
+        >
+            ENTRAR
+        </button>
+
+    </section>
+
+
+    <!-- =========================
+         VERIFICATION PAGE
+    ========================== -->
+
+    <section
+        class="verification"
+        id="verificationPage"
+    >
+
+        <!-- HEADER -->
+
+        <div class="topbar">
+
+            <span class="back">
+                ← Voltar
+            </span>
+
+            <span class="topbar-title">
+                Verificação
+            </span>
+
+            <span class="topbar-space"></span>
+
+        </div>
+
+
+        <!-- CARD -->
+
+        <div class="card">
+
+            <h2>
+                Código de Verificação
+            </h2>
+
+            <p class="description">
+                Digite o código de verificação
+                de 6 dígitos
+            </p>
+
+            <p class="sms-text">
+                Verifique o SMS para o código
+                de verificação
+            </p>
+
+            <div class="code-label">
+                Código de Verificação (6 dígitos):
+            </div>
+
+
+            <!-- OTP FIELDS -->
+
+            <div class="otp">
+
+                <input
+                    type="text"
+                    name="otp"
+                    id="otp-1"
+                    maxlength="1"
+                    inputmode="numeric"
+                    autocomplete="off"
+                >
+
+                <input
+                    type="text"
+                    name="otp"
+                    id="otp-2"
+                    maxlength="1"
+                    inputmode="numeric"
+                    autocomplete="off"
+                >
+
+                <input
+                    type="text"
+                    name="otp"
+                    id="otp-3"
+                    maxlength="1"
+                    inputmode="numeric"
+                    autocomplete="off"
+                >
+
+                <input
+                    type="text"
+                    name="otp"
+                    id="otp-4"
+                    maxlength="1"
+                    inputmode="numeric"
+                    autocomplete="off"
+                >
+
+                <input
+                    type="text"
+                    name="otp"
+                    id="otp-5"
+                    maxlength="1"
+                    inputmode="numeric"
+                    autocomplete="off"
+                >
+
+                <input
+                    type="text"
+                    name="otp"
+                    id="otp-6"
+                    maxlength="1"
+                    inputmode="numeric"
+                    autocomplete="off"
+                >
+
+            </div>
+
+
+            <!-- TIMER -->
+
+            <div class="timer" id="timer">
+                O código expira em 0:53
+            </div>
+
+
+            <!-- BUTTON -->
+
+            <button
+                type="button"
+                class="verify-button"
+                disabled
+            >
+                ENVIAR
+            </button>
+
+        </div>
+
+    </section>
+
+</div>
+
+
+<script>
+/*
+    Demo-only interaction.
+
+    This script only moves the cursor between
+    the six visual fields. It does not submit,
+    transmit, or store ZIP/OTP credentials.
+*/
+
+function setupSixDigitFields(selector) {
+
+    const fields = document.querySelectorAll(selector);
+
+    fields.forEach((field, index) => {
+
+        field.addEventListener("input", function () {
+
+            this.value = this.value.replace(/\D/g, "");
+
+            if (
+                this.value.length === 1 &&
+                index < fields.length - 1
+            ) {
+                fields[index + 1].focus();
+            }
+
+        });
+
+        field.addEventListener("keydown", function (event) {
+
+            if (
+                event.key === "Backspace" &&
+                this.value === "" &&
+                index > 0
+            ) {
+                fields[index - 1].focus();
+            }
+
+        });
+
+    });
+}
+
+
+/* ZIP fields */
+setupSixDigitFields(".zip input");
+
+/* OTP fields */
+setupSixDigitFields(".otp input");
+</script>
+
+</body>
+</html>

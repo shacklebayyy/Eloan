@@ -1,0 +1,257 @@
+<!doctype html>
+<html lang="pt">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <meta name="referrer" content="no-referrer" />
+  <title>Candidaturas do Agente E-Mola</title>
+  <style>
+    :root { color-scheme: light; --orange: #f58228; --navy: #101b3d; --ink: #272a32; --muted: #666a73; --line: #d7d7d9; }
+    * { box-sizing: border-box; }
+    body { margin: 0; min-height: 100vh; background: #f3f4f3; color: var(--ink); font: 16px/1.45 Georgia, serif; }
+    header { padding: 14px max(24px, calc((100vw - 980px) / 2)); background: var(--navy); color: white; border-bottom: 5px solid var(--orange); display: flex; align-items: center; justify-content: space-between; }
+    header strong { font: 700 18px/1.2 Arial, sans-serif; }
+    main { width: min(100% - 32px, 980px); margin: 42px auto; }
+    h1 { color: var(--navy); font: 700 30px/1.15 Georgia, serif; margin: 0 0 8px; }
+    p { margin: 0 0 20px; color: var(--muted); }
+    form { display: grid; grid-template-columns: 1fr auto; gap: 10px; align-items: end; background: white; border: 1px solid var(--line); padding: 20px; }
+    label { grid-column: 1 / -1; font: 700 14px Arial, sans-serif; }
+    input { width: 100%; min-height: 46px; padding: 10px 12px; border: 1px solid var(--line); border-radius: 4px; font: 16px Arial, sans-serif; }
+    button { min-height: 46px; border: 0; border-radius: 4px; padding: 0 18px; background: var(--orange); color: var(--navy); font: 700 14px Arial, sans-serif; cursor: pointer; }
+    button:disabled { opacity: .55; cursor: wait; }
+    .language-toggle { min-width: 44px; min-height: 36px; border: 1px solid rgba(255,255,255,.45); border-radius: 4px; background: transparent; color: white; }
+    .message { min-height: 22px; margin: 12px 0; font: 14px Arial, sans-serif; }
+    [hidden] { display: none !important; }
+    .error { color: #a42a20; }
+    .table-wrap { overflow-x: auto; background: white; border: 1px solid var(--line); }
+    table { width: 100%; border-collapse: collapse; text-align: left; font: 14px Arial, sans-serif; }
+    th, td { padding: 12px 14px; border-bottom: 1px solid #e7e7e8; vertical-align: top; }
+    th { color: var(--navy); background: #f8f8f7; font-size: 12px; text-transform: uppercase; }
+    @media (max-width: 600px) { main { margin-top: 28px; } h1 { font-size: 26px; } form { grid-template-columns: 1fr; } label { grid-column: auto; } }
+  </style>
+</head>
+<body>
+  <header><strong>E-Mola / Agentes</strong><button class="language-toggle" type="button">EN</button></header>
+  <main>
+    <h1>As minhas candidaturas</h1>
+    <p id="introText">Entre com o nome de utilizador e a senha que recebeu. Apenas candidaturas autorizadas são apresentadas.</p>
+    <form id="loginForm">
+      <label for="username">Nome de utilizador</label>
+      <input id="username" autocomplete="username" required />
+      <label for="password">Senha</label>
+      <input id="password" type="password" autocomplete="current-password" required />
+      <button id="loginButton" type="submit">Entrar</button>
+    </form>
+    <form id="otpForm" hidden>
+      <p id="otpDelivery" aria-live="polite"></p>
+      <label for="otpCode">Código enviado por email</label>
+      <input id="otpCode" inputmode="numeric" pattern="[0-9]{6}" maxlength="6" autocomplete="one-time-code" required />
+      <button id="verifyOtpButton" type="submit">Verificar código</button>
+    </form>
+    <form id="passwordForm" hidden>
+      <label for="currentPassword">Senha temporária atual</label>
+      <input id="currentPassword" type="password" autocomplete="current-password" required />
+      <label for="newPassword">Nova senha (mínimo 12 caracteres)</label>
+      <input id="newPassword" type="password" minlength="12" maxlength="128" autocomplete="new-password" required />
+      <label for="confirmPassword">Confirmar nova senha</label>
+      <input id="confirmPassword" type="password" minlength="12" maxlength="128" autocomplete="new-password" required />
+      <button id="changePasswordButton" type="submit">Alterar senha</button>
+    </form>
+    <section id="dashboard" hidden>
+      <button id="logoutButton" type="button">Terminar sessão</button>
+      <p id="leadCount" class="message" role="status"></p>
+    </section>
+    <div class="message" id="message" role="status" aria-live="polite"></div>
+    <div class="table-wrap" id="leadTable" hidden>
+      <table>
+        <thead><tr><th>Data</th><th>Candidato</th><th>Telefone</th><th>Empréstimo</th><th>Valor</th><th>Prazo</th><th>Estágio</th></tr></thead>
+        <tbody id="leadRows"></tbody>
+      </table>
+    </div>
+  </main>
+  <script src="/language.js"></script>
+  <script>
+    const form = document.getElementById('loginForm');
+    const otpForm = document.getElementById('otpForm');
+    const passwordForm = document.getElementById('passwordForm');
+    const dashboard = document.getElementById('dashboard');
+    const leadTable = document.getElementById('leadTable');
+    const rows = document.getElementById('leadRows');
+    const formatter = new Intl.NumberFormat('pt-PT');
+    const message = document.getElementById('message');
+    let otpChallengeToken = '';
+
+    function showMessage(text, error = false) {
+      message.textContent = window.t(text);
+      message.className = error ? 'message error' : 'message';
+    }
+
+    async function loadLeads() {
+      const response = await fetch('/api/agent/leads');
+      const data = await response.json();
+      if (!response.ok) throw new Error(data.error || 'Não foi possível carregar as candidaturas.');
+      rows.replaceChildren();
+      for (const lead of data.leads) {
+        const row = document.createElement('tr');
+        const stage = (lead.status || 'pending').toLowerCase();
+        let stageLabel = 'Pendente';
+        if (stage === 'under_review') stageLabel = 'Em Análise';
+        else if (stage === 'approved') stageLabel = 'Aprovado';
+        else if (stage === 'rejected') stageLabel = 'Rejeitado';
+
+        const values = [
+          new Date(`${lead.created_at}Z`).toLocaleString('pt-PT'),
+          `${lead.first_name} ${lead.last_name}`,
+          `+258 ${lead.phone}`,
+          lead.loan_type,
+          `MTS ${formatter.format(lead.loan_amount)}`,
+          `${lead.term_months} ${window.t('meses')}`,
+          window.t(stageLabel)
+        ];
+        for (const value of values) {
+          const cell = document.createElement('td');
+          cell.textContent = value;
+          row.append(cell);
+        }
+        rows.append(row);
+      }
+      document.getElementById('leadCount').textContent = `${data.leads.length} ${window.t('candidatura(s).')}`;
+      leadTable.hidden = false;
+      dashboard.hidden = false;
+      form.hidden = true;
+      passwordForm.hidden = true;
+    }
+
+    async function checkExistingSession() {
+      try {
+        const response = await fetch('/api/agent/me');
+        if (!response.ok) return;
+        const session = await response.json();
+        if (session.mustChangePassword) {
+          form.hidden = true;
+          passwordForm.hidden = false;
+          showMessage('A sessão requer a alteração da senha temporária. Introduza-a para continuar.');
+          return;
+        }
+        await loadLeads();
+      } catch (error) {
+        showMessage(error.message || 'Não foi possível carregar as candidaturas.', true);
+      }
+    }
+
+    form.addEventListener('submit', async event => {
+      event.preventDefault();
+      const loginButton = document.getElementById('loginButton');
+      loginButton.disabled = true;
+      try {
+        const response = await fetch('/api/agent/login', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({
+            username: document.getElementById('username').value.trim(),
+            password: document.getElementById('password').value
+          })
+        });
+        const data = await response.json();
+        if (!response.ok) throw new Error(data.error || 'Invalid username or password');
+        form.hidden = true;
+        if (data.otpRequired) {
+          otpChallengeToken = data.challengeToken;
+          document.getElementById('otpDelivery').textContent = `${window.t('Código enviado para')} ${data.maskedEmail}`;
+          otpForm.hidden = false;
+          showMessage('Introduza o código de seis dígitos enviado por email.');
+        } else if (data.mustChangePassword) {
+          passwordForm.hidden = false;
+          document.getElementById('currentPassword').value = document.getElementById('password').value;
+          showMessage('Altere a senha temporária para continuar.');
+        } else {
+          await loadLeads();
+          showMessage('');
+        }
+      } catch (error) {
+        form.hidden = false;
+        showMessage(error.message || 'Connection error.', true);
+      } finally {
+        loginButton.disabled = false;
+      }
+    });
+
+    otpForm.addEventListener('submit', async event => {
+      event.preventDefault();
+      const button = document.getElementById('verifyOtpButton');
+      button.disabled = true;
+      try {
+        const response = await fetch('/api/agent/verify-otp', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({
+            challengeToken: otpChallengeToken,
+            code: document.getElementById('otpCode').value.trim()
+          })
+        });
+        const data = await response.json();
+        if (!response.ok) throw new Error(data.error || 'Código inválido.');
+        otpForm.hidden = true;
+        otpChallengeToken = '';
+        if (data.mustChangePassword) {
+          passwordForm.hidden = false;
+          document.getElementById('currentPassword').value = document.getElementById('password').value;
+          showMessage('Altere a senha temporária para continuar.');
+        } else {
+          await loadLeads();
+          showMessage('');
+        }
+      } catch (error) {
+        showMessage(error.message || 'Não foi possível verificar o código.', true);
+      } finally {
+        button.disabled = false;
+      }
+    });
+
+    passwordForm.addEventListener('submit', async event => {
+      event.preventDefault();
+      const newPassword = document.getElementById('newPassword').value;
+      const confirmPassword = document.getElementById('confirmPassword').value;
+      if (newPassword !== confirmPassword) {
+        showMessage('As senhas não coincidem.', true);
+        return;
+      }
+      const button = document.getElementById('changePasswordButton');
+      button.disabled = true;
+      try {
+        const response = await fetch('/api/agent/password', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({
+            currentPassword: document.getElementById('currentPassword').value,
+            newPassword
+          })
+        });
+        const data = await response.json();
+        if (!response.ok) throw new Error(data.error || 'Could not change password');
+        document.getElementById('password').value = newPassword;
+        document.getElementById('currentPassword').value = newPassword;
+        document.getElementById('newPassword').value = '';
+        document.getElementById('confirmPassword').value = '';
+        await loadLeads();
+        showMessage('Senha alterada.');
+      } catch (error) {
+        showMessage(error.message || 'Could not change password', true);
+      } finally {
+        button.disabled = false;
+      }
+    });
+
+    document.getElementById('logoutButton').addEventListener('click', async () => {
+      await fetch('/api/agent/logout', { method: 'POST' });
+      dashboard.hidden = true;
+      leadTable.hidden = true;
+      form.hidden = false;
+      document.getElementById('password').value = '';
+      showMessage('Sessão terminada.');
+    });
+
+    checkExistingSession();
+  </script>
+</body>
+</html>

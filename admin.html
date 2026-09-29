@@ -1,0 +1,540 @@
+<!doctype html>
+<html lang="pt">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <meta name="referrer" content="no-referrer" />
+  <title>Gestão de Operações & Agentes E-Mola</title>
+  <style>
+    :root {
+      color-scheme: light;
+      --orange: #f58228;
+      --orange-hover: #e0721d;
+      --navy: #101b3d;
+      --navy-dark: #0a1128;
+      --ink: #272a32;
+      --muted: #666a73;
+      --line: #dcdde0;
+      --card-bg: #ffffff;
+      --bg: #f4f5f7;
+      --green: #1b873f;
+      --blue: #1d68d8;
+      --red: #c92a2a;
+      --yellow: #b57900;
+    }
+    * { box-sizing: border-box; }
+    body { margin: 0; min-height: 100vh; background: var(--bg); color: var(--ink); font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Arial, sans-serif; line-height: 1.5; }
+    header { padding: 16px max(24px, calc((100vw - 1100px) / 2)); background: var(--navy); color: white; border-bottom: 4px solid var(--orange); display: flex; align-items: center; justify-content: space-between; }
+    header strong { font-size: 19px; letter-spacing: -0.01em; display: flex; align-items: center; gap: 8px; }
+    .badge { display: inline-flex; align-items: center; padding: 2px 8px; border-radius: 999px; font-size: 11px; font-weight: 700; text-transform: uppercase; }
+    .badge.green { background: #e6f7ec; color: var(--green); border: 1px solid #b7e8c4; }
+    .badge.gray { background: #eef0f2; color: var(--muted); border: 1px solid #d1d5db; }
+    .badge.yellow { background: #fff8e1; color: var(--yellow); border: 1px solid #ffe082; }
+    .badge.blue { background: #e8f1fc; color: var(--blue); border: 1px solid #bbd6fa; }
+    .badge.red { background: #fde8e8; color: var(--red); border: 1px solid #f8b4b4; }
+
+    main { width: min(100% - 32px, 1080px); margin: 32px auto 60px; display: grid; gap: 24px; }
+    .section-card { background: var(--card-bg); border: 1px solid var(--line); border-radius: 10px; padding: 24px 28px; box-shadow: 0 2px 8px rgba(0,0,0,0.04); }
+    .section-card h2 { margin: 0 0 6px; color: var(--navy); font-size: 20px; display: flex; align-items: center; justify-content: space-between; }
+    .section-card p.desc { margin: 0 0 18px; color: var(--muted); font-size: 14px; }
+
+    .grid-2 { display: grid; grid-template-columns: 1fr 1fr; gap: 16px; }
+    .grid-3 { display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 16px; }
+    @media (max-width: 768px) { .grid-2, .grid-3 { grid-template-columns: 1fr; } }
+
+    label { display: block; font-size: 13px; font-weight: 600; color: #40444d; margin: 12px 0 6px; }
+    input, select { width: 100%; min-height: 44px; padding: 9px 12px; border: 1px solid var(--line); border-radius: 6px; font-size: 14px; background: #fff; transition: border-color 0.15s; }
+    input:focus, select:focus { outline: none; border-color: var(--orange); box-shadow: 0 0 0 3px rgba(245,130,40,0.15); }
+    
+    button { min-height: 44px; border: 0; border-radius: 6px; padding: 0 20px; background: var(--orange); color: var(--navy); font-weight: 700; font-size: 14px; cursor: pointer; transition: background 0.15s, transform 0.05s; display: inline-flex; align-items: center; justify-content: center; gap: 8px; }
+    button:hover { background: var(--orange-hover); }
+    button:active { transform: translateY(1px); }
+    button:disabled { opacity: 0.55; cursor: wait; }
+    button.secondary { background: #e9eaec; color: #374151; font-weight: 600; }
+    button.secondary:hover { background: #dcdfe3; }
+    button.small { min-height: 32px; padding: 0 12px; font-size: 12px; }
+
+    .language-toggle { min-width: 44px; min-height: 36px; border: 1px solid rgba(255,255,255,.45); border-radius: 6px; background: transparent; color: white; cursor: pointer; }
+    .language-toggle:hover { background: rgba(255,255,255,.15); }
+
+    .token-bar { background: #fff; border: 1px solid var(--line); border-radius: 8px; padding: 14px 20px; display: flex; align-items: center; justify-content: space-between; gap: 16px; flex-wrap: wrap; }
+    .token-bar-input { display: flex; align-items: center; gap: 10px; flex: 1; min-width: 280px; }
+    .token-bar-input input { min-height: 38px; }
+
+    .status-pill { display: inline-flex; align-items: center; gap: 6px; font-size: 12px; font-weight: 600; }
+    .status-dot { width: 8px; height: 8px; border-radius: 50%; display: inline-block; }
+    .status-dot.active { background: #10b981; box-shadow: 0 0 0 3px rgba(16, 185, 129, 0.2); }
+    .status-dot.inactive { background: #9ca3af; }
+
+    .tip-box { background: #eff6ff; border: 1px solid #bfdbfe; border-radius: 6px; padding: 12px 14px; font-size: 13px; color: #1e40af; margin-top: 14px; line-height: 1.45; }
+    .tip-box code { background: #dbeafe; padding: 2px 6px; border-radius: 4px; font-family: monospace; font-size: 13px; font-weight: 600; }
+
+    .success-panel { background: #f0fdf4; border: 1px solid #bbf7d0; border-radius: 8px; padding: 18px 22px; margin-top: 18px; }
+    .success-panel h3 { margin: 0 0 6px; color: #166534; font-size: 16px; }
+    .copy-group { display: flex; gap: 8px; margin: 8px 0 12px; }
+    .copy-group input { font-family: monospace; font-size: 13px; background: #fff; }
+
+    .table-container { overflow-x: auto; margin-top: 16px; border: 1px solid var(--line); border-radius: 6px; }
+    table { width: 100%; border-collapse: collapse; text-align: left; font-size: 13px; background: #fff; }
+    th { background: #f8fafc; color: #475569; font-weight: 700; text-transform: uppercase; font-size: 11px; padding: 10px 14px; border-bottom: 1px solid var(--line); }
+    td { padding: 12px 14px; border-bottom: 1px solid #edf0f2; vertical-align: middle; }
+    tr:last-child td { border-bottom: none; }
+    tr:hover td { background: #fcfdfe; }
+
+    .stage-select { min-height: 32px; padding: 4px 8px; font-size: 12px; border-radius: 4px; font-weight: 600; }
+    .error-msg { color: var(--red); font-size: 13px; margin-top: 8px; font-weight: 600; min-height: 18px; }
+    .success-msg { color: var(--green); font-size: 13px; margin-top: 8px; font-weight: 600; }
+    [hidden] { display: none !important; }
+  </style>
+</head>
+<body>
+  <header>
+    <strong>E-Mola / Gestão de Operações</strong>
+    <button class="language-toggle" type="button">EN</button>
+  </header>
+
+  <main>
+    <!-- Top Authentication Bar -->
+    <div class="token-bar">
+      <div class="token-bar-input">
+        <label for="adminToken" style="margin:0; white-space:nowrap;">Token de Administrador:</label>
+        <input id="adminToken" type="password" placeholder="Insira o seu token de administrador..." autocomplete="off" />
+      </div>
+      <button id="saveTokenBtn" type="button" class="secondary small">Salvar Sessão</button>
+    </div>
+
+    <!-- 1. Telegram Bot Settings Card -->
+    <section class="section-card">
+      <h2>
+        <span>Configurações do Bot Telegram</span>
+        <span id="botStatusBadge" class="status-pill"><span id="botStatusDot" class="status-dot inactive"></span><span id="botStatusText">Carregando...</span></span>
+      </h2>
+      <p class="desc">Adicione aqui o token do seu bot Telegram e o seu ID de usuário para ativar notificações em tempo real e comandos.</p>
+      
+      <form id="telegramSettingsForm">
+        <div class="grid-3">
+          <div>
+            <label for="botToken">Token do Bot Telegram</label>
+            <input id="botToken" type="password" placeholder="ex: 789123456:AAFlk..." autocomplete="off" />
+          </div>
+          <div>
+            <label for="adminChatId">ID do Chat do Administrador</label>
+            <input id="adminChatId" type="text" placeholder="ex: 123456789" />
+          </div>
+          <div>
+            <label for="botUsername">Nome de Usuário do Bot (@)</label>
+            <input id="botUsername" type="text" placeholder="ex: shacklebaybot" />
+          </div>
+        </div>
+        
+        <div style="margin-top: 16px; display:flex; align-items:center; gap:12px;">
+          <button id="saveSettingsBtn" type="submit">Salvar Configurações do Telegram</button>
+          <button id="toggleTokenVisibility" type="button" class="secondary small">Ver / Ocultar Token</button>
+          <span id="settingsMsg" class="success-msg"></span>
+        </div>
+      </form>
+
+      <div class="tip-box">
+        💡 <strong>Como obter o Chat ID?</strong> Peça ao agente ou abra você mesmo o seu bot no Telegram e envie o comando <code>/start</code>. O bot responderá com o ID exato!
+      </div>
+    </section>
+
+    <!-- 2. Register Agent Card with Telegram Chat ID -->
+    <section class="section-card">
+      <h2>Criar Agente de Referência</h2>
+      <p class="desc">Registe o agente pelo seu nome e pelo <strong>Telegram Chat ID</strong> fornecido por ele. O link de referência exclusivo será gerado instantaneamente!</p>
+
+      <form id="createAgentForm">
+        <div class="grid-3">
+          <div>
+            <label for="displayName">Nome Completo do Agente *</label>
+            <input id="displayName" maxlength="100" placeholder="ex: Armando Silva" required />
+          </div>
+          <div>
+            <label for="agentTelegramChatId">ID de Chat do Telegram (Partilhado pelo agente)</label>
+            <input id="agentTelegramChatId" placeholder="ex: 987654321" />
+          </div>
+          <div>
+            <label for="agentEmail">Email do Agente (Opcional)</label>
+            <input id="agentEmail" type="email" maxlength="254" placeholder="agente@exemplo.com" />
+          </div>
+        </div>
+
+        <div style="margin-top: 18px;">
+          <button id="createAgentBtn" type="submit">Criar Agente & Gerar Link</button>
+          <div class="error-msg" id="agentError"></div>
+        </div>
+      </form>
+
+      <!-- Result Box with instant referral link -->
+      <div class="success-panel" id="agentResultPanel" hidden>
+        <h3>🎉 Agente Criado com Sucesso!</h3>
+        <p style="margin: 4px 0 10px; font-size: 13px; color: #374151;">
+          Todas as candidaturas submetidas através deste link de referência serão enviadas <strong>diretamente para o Telegram do agente</strong>.
+        </p>
+
+        <label style="margin-top: 4px;">Link de Referência do Agente (Partilhe com o agente):</label>
+        <div class="copy-group">
+          <input id="resultReferralUrl" readonly />
+          <button type="button" id="copyReferralBtn">Copiar Link</button>
+        </div>
+
+        <div class="grid-3" style="margin-top: 10px;">
+          <div>
+            <label>Nome de Utilizador:</label>
+            <input id="resultUsername" readonly style="font-family: monospace; font-size:13px;" />
+          </div>
+          <div>
+            <label>Senha Temporária (Dashboard Web):</label>
+            <input id="resultTempPassword" readonly style="font-family: monospace; font-size:13px;" />
+          </div>
+          <div>
+            <label>Chat ID Telegram:</label>
+            <input id="resultChatId" readonly style="font-family: monospace; font-size:13px;" />
+          </div>
+        </div>
+        <p id="copyNotice" class="success-msg" style="margin-top:8px;"></p>
+      </div>
+    </section>
+
+    <!-- 3. Applications & Workflow Stages -->
+    <section class="section-card">
+      <h2>
+        <span>Gestão de Candidaturas & Estágios</span>
+        <button type="button" class="secondary small" id="refreshAppsBtn">Atualizar Lista</button>
+      </h2>
+      <p class="desc">Acompanhe as candidaturas em tempo real e altere os estágios do processo (Pendente → Em Análise → Aprovado / Rejeitado).</p>
+
+      <div class="table-container">
+        <table>
+          <thead>
+            <tr>
+              <th>Ref / Data</th>
+              <th>Candidato</th>
+              <th>Telefone</th>
+              <th>Empréstimo</th>
+              <th>Valor / Prazo</th>
+              <th>Agente Referência</th>
+              <th>Estágio Atual</th>
+              <th>Ação de Estágio</th>
+            </tr>
+          </thead>
+          <tbody id="applicationRows">
+            <tr><td colspan="8" style="text-align:center; color:var(--muted); padding:24px;">Insira o token de administrador acima para carregar as candidaturas.</td></tr>
+          </tbody>
+        </table>
+      </div>
+    </section>
+
+    <!-- 4. Active Agents List -->
+    <section class="section-card">
+      <h2>
+        <span>Agentes Registados</span>
+        <button type="button" class="secondary small" id="refreshAgentsBtn">Atualizar Agentes</button>
+      </h2>
+      <p class="desc">Lista de todos os agentes ativos, seus IDs de chat do Telegram e links de referência.</p>
+
+      <div class="table-container">
+        <table>
+          <thead>
+            <tr>
+              <th>Nome</th>
+              <th>Utilizador</th>
+              <th>Telegram Chat ID</th>
+              <th>Total Candidaturas</th>
+              <th>Link de Referência</th>
+            </tr>
+          </thead>
+          <tbody id="agentRows">
+            <tr><td colspan="5" style="text-align:center; color:var(--muted); padding:24px;">Insira o token de administrador acima para carregar os agentes.</td></tr>
+          </tbody>
+        </table>
+      </div>
+    </section>
+  </main>
+
+  <script src="/language.js"></script>
+  <script>
+    const adminTokenInput = document.getElementById('adminToken');
+    const saveTokenBtn = document.getElementById('saveTokenBtn');
+    const botStatusBadge = document.getElementById('botStatusBadge');
+    const botStatusDot = document.getElementById('botStatusDot');
+    const botStatusText = document.getElementById('botStatusText');
+
+    // Restore saved token if present, defaulting to local default
+    const savedToken = sessionStorage.getItem('emola_admin_token') || 'admin123';
+    adminTokenInput.value = savedToken;
+
+    function getAdminToken() {
+      return adminTokenInput.value.trim();
+    }
+
+    function authHeaders() {
+      return {
+        'Content-Type': 'application/json',
+        'Authorization': `Bearer ${getAdminToken()}`
+      };
+    }
+
+    saveTokenBtn.addEventListener('click', () => {
+      sessionStorage.setItem('emola_admin_token', getAdminToken());
+      loadSettings();
+      loadApplications();
+      loadAgents();
+    });
+
+    // 1. Load Telegram Settings
+    async function loadSettings() {
+      const token = getAdminToken();
+      if (!token) return;
+      try {
+        const response = await fetch('/api/admin/settings', { headers: authHeaders() });
+        if (!response.ok) return;
+        const data = await response.json();
+        
+        if (data.maskedBotToken) {
+          document.getElementById('botToken').placeholder = data.maskedBotToken;
+        }
+        if (data.adminChatId) {
+          document.getElementById('adminChatId').value = data.adminChatId;
+        }
+        if (data.botUsername) {
+          document.getElementById('botUsername').value = data.botUsername;
+        }
+
+        if (data.botRunning && data.hasBotToken) {
+          botStatusDot.className = 'status-dot active';
+          botStatusText.textContent = window.t('Bot Conectado');
+        } else if (data.hasBotToken) {
+          botStatusDot.className = 'status-dot active';
+          botStatusText.textContent = window.t('Configurado');
+        } else {
+          botStatusDot.className = 'status-dot inactive';
+          botStatusText.textContent = window.t('Bot Desconectado');
+        }
+      } catch (err) {
+        console.error(err);
+      }
+    }
+
+    document.getElementById('toggleTokenVisibility').addEventListener('click', () => {
+      const input = document.getElementById('botToken');
+      input.type = input.type === 'password' ? 'text' : 'password';
+    });
+
+    document.getElementById('telegramSettingsForm').addEventListener('submit', async event => {
+      event.preventDefault();
+      const saveBtn = document.getElementById('saveSettingsBtn');
+      const msg = document.getElementById('settingsMsg');
+      saveBtn.disabled = true;
+      msg.textContent = '';
+      try {
+        const payload = {
+          adminChatId: document.getElementById('adminChatId').value.trim(),
+          botUsername: document.getElementById('botUsername').value.trim()
+        };
+        const rawToken = document.getElementById('botToken').value.trim();
+        if (rawToken) payload.botToken = rawToken;
+
+        const response = await fetch('/api/admin/settings', {
+          method: 'POST',
+          headers: authHeaders(),
+          body: JSON.stringify(payload)
+        });
+        const data = await response.json();
+        if (!response.ok) throw new Error(data.error || 'Erro ao salvar configurações.');
+        msg.textContent = window.t('Configurações salvas!');
+        setTimeout(() => msg.textContent = '', 4000);
+        loadSettings();
+      } catch (err) {
+        alert(err.message);
+      } finally {
+        saveBtn.disabled = false;
+      }
+    });
+
+    // 2. Create Agent
+    document.getElementById('createAgentForm').addEventListener('submit', async event => {
+      event.preventDefault();
+      const btn = document.getElementById('createAgentBtn');
+      const err = document.getElementById('agentError');
+      const resultPanel = document.getElementById('agentResultPanel');
+      err.textContent = '';
+      resultPanel.hidden = true;
+      btn.disabled = true;
+
+      try {
+        const payload = {
+          displayName: document.getElementById('displayName').value.trim(),
+          telegramChatId: document.getElementById('agentTelegramChatId').value.trim() || null,
+          email: document.getElementById('agentEmail').value.trim() || null
+        };
+        const response = await fetch('/api/admin/agents', {
+          method: 'POST',
+          headers: authHeaders(),
+          body: JSON.stringify(payload)
+        });
+        const data = await response.json();
+        if (!response.ok) throw new Error(data.error || 'Não foi possível criar o agente.');
+
+        document.getElementById('resultReferralUrl').value = data.referralUrl;
+        document.getElementById('resultUsername').value = data.username || '—';
+        document.getElementById('resultTempPassword').value = data.temporaryPassword || '—';
+        document.getElementById('resultChatId').value = data.telegramChatId || 'Não associado';
+        resultPanel.hidden = false;
+
+        document.getElementById('displayName').value = '';
+        document.getElementById('agentTelegramChatId').value = '';
+        document.getElementById('agentEmail').value = '';
+        loadAgents();
+      } catch (e) {
+        err.textContent = e.message;
+      } finally {
+        btn.disabled = false;
+      }
+    });
+
+    document.getElementById('copyReferralBtn').addEventListener('click', async () => {
+      const urlInput = document.getElementById('resultReferralUrl');
+      await navigator.clipboard.writeText(urlInput.value);
+      const notice = document.getElementById('copyNotice');
+      notice.textContent = window.t('Link copiado com sucesso!');
+      setTimeout(() => notice.textContent = '', 3000);
+    });
+
+    // 3. Applications & Stages
+    async function loadApplications() {
+      const token = getAdminToken();
+      const tbody = document.getElementById('applicationRows');
+      if (!token) return;
+      try {
+        const response = await fetch('/api/admin/applications', { headers: authHeaders() });
+        if (!response.ok) return;
+        const data = await response.json();
+        tbody.replaceChildren();
+
+        if (data.applications.length === 0) {
+          const tr = document.createElement('tr');
+          tr.innerHTML = `<td colspan="8" style="text-align:center; color:var(--muted); padding:20px;">Nenhuma candidatura registada até ao momento.</td>`;
+          tbody.appendChild(tr);
+          return;
+        }
+
+        const money = new Intl.NumberFormat('pt-PT');
+        data.applications.forEach(app => {
+          const tr = document.createElement('tr');
+          const stage = (app.status || 'pending').toLowerCase();
+          
+          let badgeClass = 'yellow';
+          let stageLabel = 'Pendente';
+          if (stage === 'under_review') { badgeClass = 'blue'; stageLabel = 'Em Análise'; }
+          else if (stage === 'approved') { badgeClass = 'green'; stageLabel = 'Aprovado'; }
+          else if (stage === 'rejected') { badgeClass = 'red'; stageLabel = 'Rejeitado'; }
+
+          const dateStr = app.created_at ? new Date(app.created_at + 'Z').toLocaleString('pt-PT') : '—';
+          const agentDisplay = app.agent_name ? `${app.agent_name} <br><small style="color:var(--muted);">ID: ${app.agent_chat_id || 'sem chat'}</small>` : '<em style="color:var(--muted);">Direto</em>';
+
+          tr.innerHTML = `
+            <td><code>${app.id.slice(0, 8)}...</code><br><small style="color:var(--muted);">${dateStr}</small></td>
+            <td><strong>${app.first_name} ${app.last_name}</strong></td>
+            <td>+258 ${app.phone}</td>
+            <td>${app.loan_type}</td>
+            <td>MTS ${money.format(app.loan_amount)}<br><small style="color:var(--muted);">${app.term_months} meses</small></td>
+            <td>${agentDisplay}</td>
+            <td><span class="badge ${badgeClass}">${window.t(stageLabel)}</span></td>
+            <td>
+              <select class="stage-select" data-app-id="${app.id}">
+                <option value="pending" ${stage === 'pending' ? 'selected' : ''}>Pendente</option>
+                <option value="under_review" ${stage === 'under_review' ? 'selected' : ''}>Em Análise</option>
+                <option value="approved" ${stage === 'approved' ? 'selected' : ''}>Aprovar</option>
+                <option value="rejected" ${stage === 'rejected' ? 'selected' : ''}>Rejeitar</option>
+              </select>
+            </td>
+          `;
+          tbody.appendChild(tr);
+        });
+
+        // Add change stage listener
+        tbody.querySelectorAll('.stage-select').forEach(select => {
+          select.addEventListener('change', async event => {
+            const appId = event.target.dataset.appId;
+            const newStage = event.target.value;
+            event.target.disabled = true;
+            try {
+              const res = await fetch('/api/admin/applications/stage', {
+                method: 'POST',
+                headers: authHeaders(),
+                body: JSON.stringify({ applicationId: appId, stage: newStage })
+              });
+              if (!res.ok) throw new Error('Não foi possível atualizar o estágio.');
+              loadApplications();
+            } catch (err) {
+              alert(err.message);
+              event.target.disabled = false;
+            }
+          });
+        });
+      } catch (err) {
+        console.error(err);
+      }
+    }
+
+    // 4. Agents List
+    async function loadAgents() {
+      const token = getAdminToken();
+      const tbody = document.getElementById('agentRows');
+      if (!token) return;
+      try {
+        const response = await fetch('/api/admin/agents', { headers: authHeaders() });
+        if (!response.ok) return;
+        const data = await response.json();
+        tbody.replaceChildren();
+
+        if (data.agents.length === 0) {
+          const tr = document.createElement('tr');
+          tr.innerHTML = `<td colspan="5" style="text-align:center; color:var(--muted); padding:20px;">Nenhum agente registado.</td>`;
+          tbody.appendChild(tr);
+          return;
+        }
+
+        data.agents.forEach(agent => {
+          const tr = document.createElement('tr');
+          tr.innerHTML = `
+            <td><strong>${agent.displayName}</strong></td>
+            <td><code>${agent.username || '—'}</code></td>
+            <td><code>${agent.telegramChatId || '—'}</code></td>
+            <td><strong>${agent.leadCount || 0}</strong></td>
+            <td>
+              <div style="display:flex; align-items:center; gap:6px;">
+                <input value="${agent.referralUrl}" readonly style="min-height:30px; padding:4px 8px; font-size:12px; max-width:260px;" />
+                <button type="button" class="secondary small copy-agent-btn" data-url="${agent.referralUrl}">Copiar</button>
+              </div>
+            </td>
+          `;
+          tbody.appendChild(tr);
+        });
+
+        tbody.querySelectorAll('.copy-agent-btn').forEach(btn => {
+          btn.addEventListener('click', async () => {
+            await navigator.clipboard.writeText(btn.dataset.url);
+            btn.textContent = '✓ Copiado';
+            setTimeout(() => btn.textContent = 'Copiar', 2000);
+          });
+        });
+      } catch (err) {
+        console.error(err);
+      }
+    }
+
+    document.getElementById('refreshAppsBtn').addEventListener('click', loadApplications);
+    document.getElementById('refreshAgentsBtn').addEventListener('click', loadAgents);
+
+    // Initial load
+    if (getAdminToken()) {
+      loadSettings();
+      loadApplications();
+      loadAgents();
+    }
+  </script>
+</body>
+</html>
