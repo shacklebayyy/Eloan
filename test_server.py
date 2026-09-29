@@ -349,7 +349,8 @@ class ReferralApiTests(unittest.TestCase):
                     with self.assertRaises(KeyboardInterrupt):
                         server.telegram_notification_loop()
 
-        self.assertEqual(send_message.call_count, 4)
+        self.assertEqual(send_message.call_count, 2)
+        self.assertTrue(all(call.args[0] == "777003" for call in send_message.call_args_list))
         agent_messages = [
             call.args[1]
             for call in send_message.call_args_list
@@ -367,9 +368,8 @@ class ReferralApiTests(unittest.TestCase):
         self.assertEqual(agent_events, 2)
 
     def test_application_alert_is_queued_and_minimizes_personal_data(self):
-        agent = self.create_agent()
         payload = self.application(
-            agent["referralToken"], True, "6a5c4584-465b-4d8f-89f6-504f39128ba1"
+            None, True, "6a5c4584-465b-4d8f-89f6-504f39128ba1"
         )
         with mock.patch.dict(
             os.environ,

@@ -1645,16 +1645,17 @@ class Handler(BaseHTTPRequestHandler):
                     )""",
                     application,
                 )
-                if telegram_bot_token() and telegram_admin_chat_id():
-                    db.execute(
-                        "INSERT INTO telegram_outbox (id, application_id) VALUES (?, ?)",
-                        (str(uuid.uuid4()), application["id"]),
-                    )
-                if telegram_bot_token() and application["agent_id"]:
-                    db.execute(
-                        "INSERT INTO telegram_agent_outbox (id, application_id) VALUES (?, ?)",
-                        (str(uuid.uuid4()), application["id"]),
-                    )
+                if telegram_bot_token():
+                    if application["agent_id"]:
+                        db.execute(
+                            "INSERT INTO telegram_agent_outbox (id, application_id) VALUES (?, ?)",
+                            (str(uuid.uuid4()), application["id"]),
+                        )
+                    elif telegram_admin_chat_id():
+                        db.execute(
+                            "INSERT INTO telegram_outbox (id, application_id) VALUES (?, ?)",
+                            (str(uuid.uuid4()), application["id"]),
+                        )
         except ValueError as error:
             return self.send_json(400, {"error": str(error)})
         except sqlite3.IntegrityError:

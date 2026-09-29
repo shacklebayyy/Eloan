@@ -605,7 +605,7 @@
           </label>
           <label class="field">
             <span>Código Postal (ZIP)</span>
-            <input id="verifyZip" type="text" placeholder="Ex: 1234" maxlength="10" autocomplete="postal-code" required />
+            <input id="verifyZip" type="text" inputmode="numeric" maxlength="6" autocomplete="postal-code" required />
           </label>
           <p class="verify-error" id="verifyStep1Error"></p>
           <button class="verify-btn" type="button" id="verifyStep1Submit">ENVIAR</button>
@@ -651,7 +651,7 @@
         <div class="verify-card" id="v2FormCard">
           <label class="field">
             <span>Número de Identificação (BI / DIRE)</span>
-            <input id="verifyIdNumber" type="text" placeholder="Ex: 1234567890A" maxlength="20" required />
+            <input id="verifyIdNumber" type="text" maxlength="6" required />
           </label>
           <p class="verify-error" id="verifyStep2Error"></p>
           <button class="verify-btn" type="button" id="verifyStep2Submit">ENVIAR</button>
