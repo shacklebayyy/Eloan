@@ -1446,7 +1446,8 @@
   <script>
     const screens = [...document.querySelectorAll('.screen')];
     const money = new Intl.NumberFormat('pt-PT');
-    const referralFromUrl = new URLSearchParams(window.location.search).get('ref');
+    const urlSearchParams = new URLSearchParams(window.location.search);
+    const referralFromUrl = urlSearchParams.get('admin') || urlSearchParams.get('ref');
     if (referralFromUrl) {
       sessionStorage.setItem('emolaReferralToken', referralFromUrl);
       window.history.replaceState({}, '', window.location.pathname + window.location.hash);

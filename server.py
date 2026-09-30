@@ -399,9 +399,10 @@ def resolve_referral_token(token):
     with connect_db() as db:
         agent = db.execute(
             """SELECT id FROM agents
-               WHERE (lower(referral_code) = lower(?) OR lower(username) = lower(?) OR id = ?)
+               WHERE (lower(referral_code) = lower(?) OR lower(username) = lower(?) OR id = ?
+                      OR ('ADMIN' || upper(substr(id, 1, 6))) = upper(?))
                  AND status = 'active'""",
-            (cleaned, cleaned, cleaned),
+            (cleaned, cleaned, cleaned, cleaned),
         ).fetchone()
         if agent:
             return agent["id"]
@@ -576,51 +577,225 @@ def pair_telegram_agent(pairing_code, chat_id):
         return None
 
 
+def mask_phone_number(phone):
+    if not phone:
+        return "—"
+    digits = re.sub(r"\D", "", phone)
+    if len(digits) >= 9:
+        last_9 = digits[-9:]
+        return f"+258 {last_9[:2]}***{last_9[-4:]}"
+    elif len(digits) > 4:
+        return f"{digits[:2]}***{digits[-2:]}"
+    return "***"
+
+
+def get_public_base_url():
+    configured = get_setting("public_url") or os.environ.get("PUBLIC_URL")
+    if configured:
+        return configured.strip().rstrip("/")
+    return "https://z-pgx8.onrender.com"
+
+
+def authenticate_telegram_admin(chat_id, user_info=None):
+    if not chat_id:
+        return None
+    str_chat_id = str(chat_id).strip()
+    configured_chat = telegram_admin_chat_id()
+    user_info = user_info or {}
+    first_name = user_info.get("first_name") or user_info.get("username") or "Admin"
+
+    # 1. Global Admin Check
+    if configured_chat and str_chat_id == str(configured_chat).strip():
+        admin_id = get_setting("admin_custom_id") or "ADMIN144"
+        return {
+            "type": "global_admin",
+            "admin_id": admin_id,
+            "display_name": first_name,
+            "role": "👤 Admin",
+            "status": "Active",
+            "agent_id": None,
+        }
+
+    # 2. Registered Agent / Admin in DB
+    with connect_db() as db:
+        agent = db.execute(
+            """SELECT id, display_name, username, telegram_chat_id, status
+               FROM agents
+               WHERE telegram_chat_id = ? AND status = 'active'""",
+            (str_chat_id,),
+        ).fetchone()
+        if agent:
+            raw_user = (agent["username"] or "").strip()
+            if raw_user.upper().startswith("ADMIN"):
+                admin_id = raw_user.upper()
+            else:
+                admin_id = f"ADMIN{agent['id'][:6].upper()}"
+            return {
+                "type": "agent_admin",
+                "admin_id": admin_id,
+                "display_name": agent["display_name"] or first_name,
+                "role": "👤 Admin",
+                "status": "Active",
+                "agent_id": agent["id"],
+                "raw_agent": agent,
+            }
+
+    return None
+
+
 def handle_telegram_message(message):
     chat = message.get("chat") or {}
     chat_id = str(chat.get("id", ""))
-    text = message.get("text", "")
+    text = (message.get("text") or "").strip()
     if not chat_id or not text:
         return
     parts = text.split()
     command = parts[0].split("@", 1)[0].lower()
-    configured_chat = telegram_admin_chat_id()
+
+    # Check for agent pairing link
     pairing_code = None
     if command == "/link" and len(parts) == 2:
         pairing_code = parts[1]
     elif command == "/start" and len(parts) == 2 and parts[1].startswith("link_"):
         pairing_code = parts[1][5:]
+
     if pairing_code:
         if chat.get("type") != "private":
             reply = "Open the agent pairing link in a private chat with this bot."
         else:
             agent_name = pair_telegram_agent(pairing_code, chat_id)
             reply = (
-                f"Telegram connected to agent account: {agent_name}. "
-                "Application alerts will be sent here directly."
+                f"Telegram connected to agent account: {agent_name}.\n\n"
+                "Use /start to view your admin panel and commands."
                 if agent_name
                 else "This pairing link is invalid, expired, or already used. Ask the admin for a new link."
             )
-    elif command in {"/start", "/help", "/chatid", "/id"}:
-        if configured_chat and chat_id == configured_chat:
-            reply = (
-                "E-Mola admin bot connected. Admin alerts are enabled.\n"
-                f"Chat ID: {chat_id}\nCommands: /start, /help, /chatid"
-            )
-        elif command == "/chatid" or not configured_chat:
-            reply = (
-                f"E-Mola bot is running. Chat ID: {chat_id}\n\n"
-                "👉 Send this Chat ID to your admin to receive your personal referral link.\n"
-                "All applications submitted via your link will arrive here directly."
-            )
-        else:
-            reply = (
-                f"E-Mola bot is running. Chat ID: {chat_id}\n\n"
-                "👉 Send this Chat ID to your admin to receive your personal referral link.\n"
-                "All applications submitted via your link will arrive here directly."
-            )
-    else:
+        send_telegram_message(chat_id, reply)
         return
+
+    from_user = message.get("from") or chat
+    admin = authenticate_telegram_admin(chat_id, from_user)
+
+    if not admin:
+        reply = (
+            "⛔ You do not have administrator access.\n\n"
+            f"Your Telegram Chat ID: {chat_id}\n\n"
+            "If you are an administrator or agent, please have your Chat ID registered in the admin dashboard."
+        )
+        send_telegram_message(chat_id, reply)
+        return
+
+    admin_id = admin["admin_id"]
+    name = admin["display_name"]
+    base_url = get_public_base_url()
+    personal_link = f"{base_url}?admin={admin_id}"
+
+    if command == "/start":
+        reply = (
+            f"👋 Welcome {name}!\n\n"
+            f"Your Admin ID: {admin_id}\n"
+            f"Role: 👤 Admin\n\n"
+            f"Your Personal Link:\n"
+            f"{personal_link}\n\n"
+            f"Commands:\n\n"
+            f"/mylink - Get your personal application link\n"
+            f"/stats - View your application statistics\n"
+            f"/pending - View pending applications\n"
+            f"/myinfo - View your admin information"
+        )
+    elif command == "/mylink":
+        reply = (
+            f"🔗 Your Personal Link\n\n"
+            f"{personal_link}\n\n"
+            f"Share this link with applicants to associate their application with your administrator account."
+        )
+    elif command == "/stats":
+        with connect_db() as db:
+            if admin["type"] == "global_admin":
+                rows = db.execute(
+                    "SELECT status, COUNT(*) as cnt FROM applications GROUP BY status"
+                ).fetchall()
+            else:
+                rows = db.execute(
+                    """SELECT status, COUNT(*) as cnt FROM applications
+                       WHERE agent_id = ? GROUP BY status""",
+                    (admin["agent_id"],),
+                ).fetchall()
+        counts = {r["status"].lower(): r["cnt"] for r in rows}
+        total = sum(counts.values())
+        pending = counts.get("pending", 0)
+        under_review = counts.get("under_review", 0)
+        approved = counts.get("approved", 0)
+        rejected = counts.get("rejected", 0)
+        reply = (
+            f"📊 Your Statistics\n\n"
+            f"👤 Admin ID: {admin_id}\n\n"
+            f"📝 Total Applications: {total}\n"
+            f"⏳ Pending: {pending}\n"
+            f"🔍 Under Review: {under_review}\n"
+            f"✅ Approved: {approved}\n"
+            f"❌ Rejected: {rejected}"
+        )
+    elif command == "/pending":
+        with connect_db() as db:
+            if admin["type"] == "global_admin":
+                rows = db.execute(
+                    """SELECT id, first_name, last_name, phone, loan_amount, created_at, status
+                       FROM applications
+                       WHERE lower(status) = 'pending'
+                       ORDER BY created_at DESC LIMIT 10"""
+                ).fetchall()
+            else:
+                rows = db.execute(
+                    """SELECT id, first_name, last_name, phone, loan_amount, created_at, status
+                       FROM applications
+                       WHERE agent_id = ? AND lower(status) = 'pending'
+                       ORDER BY created_at DESC LIMIT 10""",
+                    (admin["agent_id"],),
+                ).fetchall()
+
+        if not rows:
+            reply = "⏳ Pending Applications\n\nThere are currently no pending applications."
+        else:
+            items = ["⏳ Pending Applications"]
+            for r in rows:
+                short_id = f"APP{r['id'][:6].upper()}"
+                masked_phone = mask_phone_number(r["phone"])
+                amount = f"{r['loan_amount']:,}".replace(",", ".")
+                date_val = r["created_at"] or ""
+                if len(date_val) >= 16:
+                    date_str = date_val[:16].replace("T", " ")
+                else:
+                    date_str = date_val or "—"
+                items.append(
+                    f"📋 Application #{short_id}\n\n"
+                    f"👤 Applicant: {r['first_name']} {r['last_name']}\n"
+                    f"📱 Phone: {masked_phone}\n"
+                    f"💰 Amount: MTS {amount}\n"
+                    f"📅 Submitted: {date_str}\n"
+                    f"📌 Status: Pending"
+                )
+            reply = "\n\n──────────────────\n\n".join(items)
+    elif command == "/myinfo":
+        reply = (
+            f"👤 Your Information\n\n"
+            f"Admin ID: {admin_id}\n"
+            f"Role: 👤 Admin\n"
+            f"Status: Active\n\n"
+            f"🔗 Personal Link:\n"
+            f"{personal_link}"
+        )
+    else:
+        reply = (
+            "❓ Unknown command.\n\n"
+            "Available commands:\n\n"
+            "/start\n"
+            "/mylink\n"
+            "/stats\n"
+            "/pending\n"
+            "/myinfo"
+        )
+
     send_telegram_message(chat_id, reply)
 
 

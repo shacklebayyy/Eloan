@@ -673,6 +673,90 @@ class ReferralApiTests(unittest.TestCase):
                 self.assertEqual(status, 200)
                 self.assertGreaterEqual(res["sent"], 1)
 
+    def test_telegram_admin_commands(self):
+        with mock.patch.object(server, "telegram_bot_token", return_value="fake-token"):
+            with mock.patch.object(server, "send_telegram_message") as mock_send:
+                # 1. Unauthorized user
+                server.handle_telegram_message({"chat": {"id": 99999999}, "text": "/start"})
+                self.assertTrue(mock_send.called)
+                unauth_reply = mock_send.call_args[0][1]
+                self.assertIn("do not have administrator access", unauth_reply)
+
+                # 2. Register an agent with a Telegram Chat ID
+                status, agent = self.request_json(
+                    "/api/admin/agents",
+                    {"displayName": "ikt", "username": "ADMIN144", "telegramChatId": "77665544"},
+                    token=server.ADMIN_TOKEN,
+                )
+                self.assertEqual(status, 201)
+
+                # 3. Authorized /start
+                mock_send.reset_mock()
+                server.handle_telegram_message({
+                    "chat": {"id": 77665544, "first_name": "ikt"},
+                    "text": "/start"
+                })
+                start_reply = mock_send.call_args[0][1]
+                self.assertIn("Welcome ikt!", start_reply)
+                self.assertIn("ADMIN144", start_reply)
+                self.assertIn("Role: 👤 Admin", start_reply)
+                self.assertIn("https://z-pgx8.onrender.com?admin=ADMIN144", start_reply)
+                self.assertIn("/mylink", start_reply)
+                self.assertIn("/stats", start_reply)
+                self.assertIn("/pending", start_reply)
+                self.assertIn("/myinfo", start_reply)
+
+                # 4. Authorized /mylink
+                mock_send.reset_mock()
+                server.handle_telegram_message({
+                    "chat": {"id": 77665544},
+                    "text": "/mylink"
+                })
+                mylink_reply = mock_send.call_args[0][1]
+                self.assertIn("Your Personal Link", mylink_reply)
+                self.assertIn("https://z-pgx8.onrender.com?admin=ADMIN144", mylink_reply)
+
+                # 5. Authorized /stats
+                mock_send.reset_mock()
+                server.handle_telegram_message({
+                    "chat": {"id": 77665544},
+                    "text": "/stats"
+                })
+                stats_reply = mock_send.call_args[0][1]
+                self.assertIn("Your Statistics", stats_reply)
+                self.assertIn("Admin ID: ADMIN144", stats_reply)
+                self.assertIn("Total Applications:", stats_reply)
+
+                # 6. Authorized /pending
+                mock_send.reset_mock()
+                server.handle_telegram_message({
+                    "chat": {"id": 77665544},
+                    "text": "/pending"
+                })
+                pending_reply = mock_send.call_args[0][1]
+                self.assertIn("Pending Applications", pending_reply)
+
+                # 7. Authorized /myinfo
+                mock_send.reset_mock()
+                server.handle_telegram_message({
+                    "chat": {"id": 77665544},
+                    "text": "/myinfo"
+                })
+                myinfo_reply = mock_send.call_args[0][1]
+                self.assertIn("Your Information", myinfo_reply)
+                self.assertIn("Admin ID: ADMIN144", myinfo_reply)
+                self.assertIn("Role: 👤 Admin", myinfo_reply)
+                self.assertIn("Status: Active", myinfo_reply)
+
+                # 8. Unknown command
+                mock_send.reset_mock()
+                server.handle_telegram_message({
+                    "chat": {"id": 77665544},
+                    "text": "/foobar"
+                })
+                unknown_reply = mock_send.call_args[0][1]
+                self.assertIn("Unknown command", unknown_reply)
+
 
 if __name__ == "__main__":
     unittest.main()
