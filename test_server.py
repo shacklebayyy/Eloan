@@ -927,6 +927,63 @@ class ReferralApiTests(unittest.TestCase):
                 edited_text = mock_edit.call_args[0][2]
                 self.assertIn("📋 Decision: ✅ Approved", edited_text)
 
+    def test_mylink_matches_admin_generated_link(self):
+        with mock.patch.object(server, "send_telegram_message") as mock_send:
+            with mock.patch.dict(os.environ, {"TELEGRAM_ADMIN_CHAT_ID": "444555666"}):
+                # 1. Update settings with public domain
+                status, s_res = self.request_json(
+                    "/api/admin/settings",
+                    {"publicAppUrl": "https://z-pgx8.onrender.com"},
+                    token=server.ADMIN_TOKEN,
+                )
+                self.assertEqual(status, 200)
+
+                # 2. Admin creates an agent on the admin dashboard
+                status, agent = self.request_json(
+                    "/api/admin/agents",
+                    {"displayName": "Link Match Agent", "telegramChatId": "999111222"},
+                    token=server.ADMIN_TOKEN,
+                )
+                self.assertEqual(status, 201)
+                admin_gen_url = agent["referralUrl"]
+                self.assertTrue(admin_gen_url.startswith("https://z-pgx8.onrender.com/?ref="))
+
+                # 3. Agent checks /mylink on Telegram
+                server.handle_telegram_message({
+                    "chat": {"id": 999111222, "first_name": "Link Match Agent"},
+                    "text": "/mylink"
+                })
+                reply = mock_send.call_args[0][1]
+                # The link sent in Telegram must EXACTLY match the link generated in the admin
+                self.assertIn(admin_gen_url, reply)
+
+                # 4. Agent checks /start on Telegram -> also includes the exact link
+                mock_send.reset_mock()
+                server.handle_telegram_message({
+                    "chat": {"id": 999111222, "first_name": "Link Match Agent"},
+                    "text": "/start"
+                })
+                start_reply = mock_send.call_args[0][1]
+                self.assertIn(admin_gen_url, start_reply)
+
+                # 5. Global Admin uses /seturl directly in Telegram
+                mock_send.reset_mock()
+                server.handle_telegram_message({
+                    "chat": {"id": 444555666, "first_name": "Admin"},
+                    "text": "/seturl https://custom-domain.com"
+                })
+                seturl_reply = mock_send.call_args[0][1]
+                self.assertIn("https://custom-domain.com", seturl_reply)
+
+                # 6. Now agent asks for /mylink again -> uses new domain!
+                mock_send.reset_mock()
+                server.handle_telegram_message({
+                    "chat": {"id": 999111222},
+                    "text": "/mylink"
+                })
+                updated_reply = mock_send.call_args[0][1]
+                self.assertIn(f"https://custom-domain.com/?ref={agent['referralToken']}", updated_reply)
+
 
 if __name__ == "__main__":
     unittest.main()

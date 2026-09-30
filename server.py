@@ -17,7 +17,7 @@ from email.message import EmailMessage
 from email.utils import parseaddr
 from http.server import BaseHTTPRequestHandler, ThreadingHTTPServer
 from pathlib import Path
-from urllib.parse import urlsplit
+from urllib.parse import parse_qs, urlsplit
 from urllib.request import Request, urlopen
 
 
@@ -594,17 +594,26 @@ def mask_phone_number(phone):
     return "***"
 
 
-def get_public_base_url():
+def get_public_base_url(headers=None):
     configured = (
         get_setting("public_url")
         or get_setting("app_url")
+        or os.environ.get("RENDER_EXTERNAL_URL")
         or os.environ.get("PUBLIC_URL")
         or os.environ.get("APP_URL")
     )
     if configured:
         return configured.strip().rstrip("/")
+    if headers:
+        host = headers.get("X-Forwarded-Host") or headers.get("Host")
+        if host:
+            clean_host = host.split(",")[0].strip()
+            proto = headers.get("X-Forwarded-Proto") or ("https" if "render.com" in clean_host else "http")
+            return f"{proto}://{clean_host}".rstrip("/")
     last_host = get_setting("last_seen_host")
     if last_host:
+        if last_host.startswith("http://") or last_host.startswith("https://"):
+            return last_host.rstrip("/")
         proto = "http" if ("localhost" in last_host or "127.0.0.1" in last_host) else "https"
         return f"{proto}://{last_host}".rstrip("/")
     return f"http://{HOST}:{PORT}"
@@ -647,19 +656,9 @@ def authenticate_telegram_admin(chat_id, user_info=None):
     user_info = user_info or {}
     first_name = user_info.get("first_name") or user_info.get("username") or "Admin"
 
-    # 1. Global Admin Check
-    if configured_chat and str_chat_id == str(configured_chat).strip():
-        admin_id = get_setting("admin_custom_id") or "Admin"
-        return {
-            "type": "global_admin",
-            "admin_id": admin_id,
-            "display_name": first_name,
-            "role": "👤 Admin",
-            "status": "Active",
-            "agent_id": None,
-        }
+    is_global_admin = bool(configured_chat and str_chat_id == str(configured_chat).strip())
 
-    # 2. Registered Agent / Admin in DB
+    # Look up registered agent by this chat ID
     with connect_db() as db:
         agent = db.execute(
             """SELECT id, display_name, username, referral_code, telegram_chat_id, status
@@ -667,19 +666,51 @@ def authenticate_telegram_admin(chat_id, user_info=None):
                WHERE telegram_chat_id = ? AND status = 'active'""",
             (str_chat_id,),
         ).fetchone()
+
+        # If global admin and not found by chat_id, check if there is an admin agent profile
+        if not agent and is_global_admin:
+            agent = db.execute(
+                """SELECT id, display_name, username, referral_code, telegram_chat_id, status
+                   FROM agents
+                   WHERE (lower(username) LIKE '%admin%' OR lower(display_name) LIKE '%admin%')
+                     AND status = 'active'
+                   ORDER BY created_at DESC LIMIT 1"""
+            ).fetchone()
+
+    if is_global_admin:
+        custom_id = get_setting("admin_custom_id")
         if agent:
-            raw_user = (agent["username"] or "").strip()
-            admin_id = raw_user if raw_user else f"AGENT_{agent['id'][:6].upper()}"
-            role = "👤 Admin" if "admin" in raw_user.lower() else "👤 Agent"
-            return {
-                "type": "agent_admin",
-                "admin_id": admin_id,
-                "display_name": agent["display_name"] or first_name,
-                "role": role,
-                "status": "Active",
-                "agent_id": agent["id"],
-                "raw_agent": agent,
-            }
+            admin_id = agent["username"] or custom_id or "ADMIN"
+            display_name = agent["display_name"] or first_name
+            agent_id = agent["id"]
+        else:
+            admin_id = custom_id or "ADMIN"
+            display_name = first_name
+            agent_id = None
+
+        return {
+            "type": "global_admin",
+            "admin_id": admin_id,
+            "display_name": display_name,
+            "role": "👤 Admin",
+            "status": "Active",
+            "agent_id": agent_id,
+            "raw_agent": agent,
+        }
+
+    if agent:
+        raw_user = (agent["username"] or "").strip()
+        admin_id = raw_user if raw_user else f"AGENT_{agent['id'][:6].upper()}"
+        role = "👤 Admin" if "admin" in raw_user.lower() else "👤 Agent"
+        return {
+            "type": "agent_admin",
+            "admin_id": admin_id,
+            "display_name": agent["display_name"] or first_name,
+            "role": role,
+            "status": "Active",
+            "agent_id": agent["id"],
+            "raw_agent": agent,
+        }
 
     return None
 
@@ -736,8 +767,8 @@ def handle_telegram_message(message):
         ref_code = create_referral_token(admin["agent_id"])
         personal_link = f"{base_url}/?ref={ref_code}"
     else:
-        admin_ref = get_setting("admin_custom_id") or "admin"
-        personal_link = f"{base_url}/?admin={admin_ref}"
+        admin_ref = admin.get("admin_id") or get_setting("admin_custom_id") or "admin"
+        personal_link = f"{base_url}/?ref={admin_ref}"
 
     clean_lower = text.lower().strip()
     is_link_cmd = (
@@ -753,7 +784,11 @@ def handle_telegram_message(message):
     )
 
     if command == "/start" or clean_lower in {"start", "oi", "ola", "olá", "hi", "hello"}:
-        admin_extra = "\n/setpayment - Configure top-up payment methods" if admin["type"] == "global_admin" else ""
+        admin_extra = (
+            "\n/setpayment - Configure top-up payment methods\n/seturl - Configure public application URL"
+            if admin["type"] == "global_admin"
+            else ""
+        )
         pm = get_payment_methods()
         till = pm.get("mpesaTill") or pm.get("till") or "Not configured"
         paybill = pm.get("mpesaPaybill") or pm.get("paybill") or "Not configured"
@@ -789,6 +824,25 @@ def handle_telegram_message(message):
         )
     elif is_topup_cmd:
         reply = format_payment_methods_message()
+    elif command in {"/seturl", "/setlink", "/baseurl"}:
+        if admin["type"] != "global_admin":
+            reply = "⛔ Only the administrator can configure the public URL."
+        else:
+            subparts = parts[1:]
+            if not subparts:
+                current_url = get_public_base_url()
+                reply = (
+                    f"🔗 Public Application URL:\n👉 {current_url}\n\n"
+                    "To update the public URL, send:\n"
+                    "/seturl https://your-domain.onrender.com"
+                )
+            else:
+                new_url = subparts[0].strip().rstrip("/")
+                if not new_url.startswith("http://") and not new_url.startswith("https://"):
+                    new_url = f"https://{new_url}"
+                set_setting("public_url", new_url)
+                set_setting("last_seen_host", new_url)
+                reply = f"✅ Application URL updated to:\n{new_url}\n\nYour personal links will now use this URL."
     elif command == "/setpayment":
         if admin["type"] != "global_admin":
             reply = "⛔ Only the administrator can configure payment methods."
@@ -1306,7 +1360,19 @@ class Handler(BaseHTTPRequestHandler):
             f"HttpOnly; SameSite=Strict{secure}"
         )
 
+    def record_request_host(self):
+        host = self.headers.get("X-Forwarded-Host") or self.headers.get("Host")
+        if host:
+            clean_host = host.split(",")[0].strip()
+            if not ("127.0.0.1" in clean_host or "localhost" in clean_host or "0.0.0.0" in clean_host):
+                proto = self.headers.get("X-Forwarded-Proto") or ("https" if "render.com" in clean_host else "http")
+                detected_url = f"{proto}://{clean_host}".rstrip("/")
+                if not get_setting("public_url"):
+                    set_setting("public_url", detected_url)
+                set_setting("last_seen_host", detected_url)
+
     def do_GET(self):
+        self.record_request_host()
         path = urlsplit(self.path).path
         if path == "/api/health":
             return self.send_json(200, {"status": "ok"})
@@ -1379,6 +1445,7 @@ class Handler(BaseHTTPRequestHandler):
         return self.send_error(404)
 
     def do_POST(self):
+        self.record_request_host()
         path = urlsplit(self.path).path
         try:
             data = self.read_json()
@@ -1411,9 +1478,15 @@ class Handler(BaseHTTPRequestHandler):
     def get_admin_settings(self):
         if not self.authorized(ADMIN_TOKEN):
             return self.send_json(401, {"error": "Unauthorized"})
+        query = parse_qs(urlsplit(self.path).query)
+        origin_val = query.get("origin", [None])[0]
+        if origin_val and not ("127.0.0.1" in origin_val or "localhost" in origin_val):
+            set_setting("public_url", origin_val.strip().rstrip("/"))
+            set_setting("last_seen_host", origin_val.strip().rstrip("/"))
         token = telegram_bot_token()
         masked_token = (token[:6] + "..." + token[-4:]) if len(token) > 10 else ("Configured" if token else "")
         payment_methods = get_payment_methods()
+        public_url = get_public_base_url(self.headers)
         return self.send_json(
             200,
             {
@@ -1423,6 +1496,7 @@ class Handler(BaseHTTPRequestHandler):
                 "botUsername": telegram_bot_username(),
                 "botRunning": _telegram_threads_active,
                 "paymentMethods": payment_methods,
+                "publicAppUrl": public_url,
             },
         )
 
@@ -1434,6 +1508,7 @@ class Handler(BaseHTTPRequestHandler):
         bot_token = data.get("botToken")
         admin_chat_id = data.get("adminChatId")
         bot_username = data.get("botUsername")
+        public_app_url = data.get("publicAppUrl")
 
         if bot_token is not None and str(bot_token).strip():
             set_setting("telegram_bot_token", str(bot_token).strip())
@@ -1442,6 +1517,12 @@ class Handler(BaseHTTPRequestHandler):
         if bot_username is not None and str(bot_username).strip():
             clean_username = str(bot_username).strip().lstrip("@")
             set_setting("telegram_bot_username", clean_username)
+        if public_app_url is not None and str(public_app_url).strip():
+            clean_url = str(public_app_url).strip().rstrip("/")
+            if not clean_url.startswith("http://") and not clean_url.startswith("https://"):
+                clean_url = f"https://{clean_url}"
+            set_setting("public_url", clean_url)
+            set_setting("last_seen_host", clean_url)
 
         if "paymentMethods" in data and isinstance(data["paymentMethods"], dict):
             set_setting("payment_methods", json.dumps(data["paymentMethods"]))
@@ -1462,7 +1543,7 @@ class Handler(BaseHTTPRequestHandler):
                    GROUP BY a.id
                    ORDER BY a.created_at DESC"""
             ).fetchall()
-        host = self.headers.get("Host", f"{HOST}:{PORT}")
+        base_url = get_public_base_url(self.headers)
         agents = []
         for r in rows:
             token = create_referral_token(r["id"])
@@ -1475,7 +1556,7 @@ class Handler(BaseHTTPRequestHandler):
                 "status": r["status"],
                 "createdAt": r["created_at"],
                 "leadCount": r["lead_count"],
-                "referralUrl": f"http://{host}/?ref={token}",
+                "referralUrl": f"{base_url}/?ref={token}",
             })
         return self.send_json(200, {"agents": agents})
 
@@ -1746,8 +1827,8 @@ class Handler(BaseHTTPRequestHandler):
             return self.send_json(500, {"error": "Could not create agent"})
 
         token = create_referral_token(agent_id)
-        host = self.headers.get("Host", f"{HOST}:{PORT}")
-        referral_url = f"http://{host}/?ref={token}"
+        base_url = get_public_base_url(self.headers)
+        referral_url = f"{base_url}/?ref={token}"
 
         if telegram_chat_id and telegram_bot_token():
             try:

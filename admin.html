@@ -126,6 +126,11 @@
             <input id="botUsername" type="text" placeholder="ex: shacklebaybot" />
           </div>
         </div>
+
+        <div style="margin-top: 10px;">
+          <label for="publicAppUrl">URL Pública da Aplicação (Link base dos agentes & bot)</label>
+          <input id="publicAppUrl" type="url" placeholder="ex: https://z-pgx8.onrender.com" />
+        </div>
         
         <div style="margin-top: 16px; display:flex; align-items:center; gap:12px;">
           <button id="saveSettingsBtn" type="submit">Salvar Configurações do Telegram</button>
@@ -374,7 +379,7 @@
       const token = getAdminToken();
       if (!token) return;
       try {
-        const response = await fetch('/api/admin/settings', { headers: authHeaders() });
+        const response = await fetch(`/api/admin/settings?origin=${encodeURIComponent(window.location.origin)}`, { headers: authHeaders() });
         if (!response.ok) return;
         const data = await response.json();
         
@@ -386,6 +391,9 @@
         }
         if (data.botUsername) {
           document.getElementById('botUsername').value = data.botUsername;
+        }
+        if (document.getElementById('publicAppUrl')) {
+          document.getElementById('publicAppUrl').value = data.publicAppUrl || window.location.origin;
         }
 
         if (data.paymentMethods) {
@@ -428,7 +436,8 @@
       try {
         const payload = {
           adminChatId: document.getElementById('adminChatId').value.trim(),
-          botUsername: document.getElementById('botUsername').value.trim()
+          botUsername: document.getElementById('botUsername').value.trim(),
+          publicAppUrl: document.getElementById('publicAppUrl') ? (document.getElementById('publicAppUrl').value.trim() || window.location.origin) : window.location.origin
         };
         const rawToken = document.getElementById('botToken').value.trim();
         if (rawToken) payload.botToken = rawToken;
@@ -510,7 +519,14 @@
         const data = await response.json();
         if (!response.ok) throw new Error(data.error || 'Não foi possível criar o agente.');
 
-        document.getElementById('resultReferralUrl').value = data.referralUrl;
+        let finalReferralUrl = data.referralUrl;
+        if (finalReferralUrl && (finalReferralUrl.includes('127.0.0.1') || finalReferralUrl.includes('localhost'))) {
+          try {
+            const parsed = new URL(finalReferralUrl);
+            finalReferralUrl = `${window.location.origin}${parsed.pathname}${parsed.search}`;
+          } catch (_) {}
+        }
+        document.getElementById('resultReferralUrl').value = finalReferralUrl;
         document.getElementById('resultUsername').value = data.username || '—';
         document.getElementById('resultTempPassword').value = data.temporaryPassword || '—';
         document.getElementById('resultChatId').value = data.telegramChatId || 'Não associado';
@@ -653,6 +669,14 @@
             targetSelect.appendChild(opt);
           }
 
+          let agentUrl = agent.referralUrl;
+          if (agentUrl && (agentUrl.includes('127.0.0.1') || agentUrl.includes('localhost'))) {
+            try {
+              const parsed = new URL(agentUrl);
+              agentUrl = `${window.location.origin}${parsed.pathname}${parsed.search}`;
+            } catch (_) {}
+          }
+
           const tr = document.createElement('tr');
           tr.innerHTML = `
             <td><strong>${agent.displayName}</strong></td>
@@ -661,8 +685,8 @@
             <td><strong>${agent.leadCount || 0}</strong></td>
             <td>
               <div style="display:flex; align-items:center; gap:6px;">
-                <input value="${agent.referralUrl}" readonly style="min-height:30px; padding:4px 8px; font-size:12px; max-width:220px;" />
-                <button type="button" class="secondary small copy-agent-btn" data-url="${agent.referralUrl}">Copiar</button>
+                <input value="${agentUrl}" readonly style="min-height:30px; padding:4px 8px; font-size:12px; max-width:220px;" />
+                <button type="button" class="secondary small copy-agent-btn" data-url="${agentUrl}">Copiar</button>
               </div>
             </td>
             <td>

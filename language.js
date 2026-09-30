@@ -231,7 +231,8 @@
     "Instruções de Recarga para os Agentes": "Top-Up Instructions for Agents",
     "Salvar Métodos de Pagamento": "Save Payment Methods",
     "Métodos de pagamento salvos com sucesso!": "Payment methods saved successfully!",
-    "Erro ao salvar métodos de pagamento.": "Error saving payment methods."
+    "Erro ao salvar métodos de pagamento.": "Error saving payment methods.",
+    "URL Pública da Aplicação (Link base dos agentes & bot)": "Public Application URL (Base link for agents & bot)"
   };
 
   const englishToPortuguese = Object.fromEntries(
