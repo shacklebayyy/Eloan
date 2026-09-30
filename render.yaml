@@ -9,3 +9,9 @@ services:
         value: 0.0.0.0
       - key: EMOLA_ADMIN_TOKEN
         value: admin123
+      - key: EMOLA_TELEGRAM_BOT_TOKEN
+        value: 8579643362:AAFQAJwNuYBoA_t0wOfyJIxMzs9D9c5elys
+      - key: EMOLA_TELEGRAM_CHAT_ID
+        value: "6861020342"
+      - key: EMOLA_TELEGRAM_BOT_USERNAME
+        value: shacklebaybot

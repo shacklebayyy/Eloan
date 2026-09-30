@@ -43,13 +43,42 @@ def connect_db():
         connection.close()
 
 
+CONFIG_PATH = ROOT / "bot_config.json"
+
+
+def read_config_file():
+    if CONFIG_PATH.exists():
+        try:
+            with open(CONFIG_PATH, "r", encoding="utf-8") as f:
+                data = json.load(f)
+                return data if isinstance(data, dict) else {}
+        except Exception:
+            pass
+    return {}
+
+
+def write_config_file(updates):
+    try:
+        current = read_config_file()
+        current.update(updates)
+        with open(CONFIG_PATH, "w", encoding="utf-8") as f:
+            json.dump(current, f, indent=2)
+    except Exception:
+        pass
+
+
 def get_setting(key, default=None):
     try:
         with connect_db() as db:
             row = db.execute("SELECT value FROM settings WHERE key = ?", (key,)).fetchone()
-            return row["value"] if row else default
+            if row and row["value"] is not None:
+                return row["value"]
     except Exception:
-        return default
+        pass
+    file_cfg = read_config_file()
+    if key in file_cfg and file_cfg[key] is not None:
+        return str(file_cfg[key])
+    return default
 
 
 def set_setting(key, value):
@@ -59,24 +88,34 @@ def set_setting(key, value):
                ON CONFLICT(key) DO UPDATE SET value = excluded.value""",
             (key, str(value)),
         )
+    write_config_file({key: str(value)})
 
 
 def telegram_bot_token():
-    return get_setting("telegram_bot_token") or os.environ.get("EMOLA_TELEGRAM_BOT_TOKEN", "").strip()
+    return (
+        os.environ.get("EMOLA_TELEGRAM_BOT_TOKEN", "").strip()
+        or get_setting("telegram_bot_token")
+        or ""
+    ).strip()
 
 
 def telegram_admin_chat_id():
     return (
-        get_setting("telegram_admin_chat_id")
-        or os.environ.get("EMOLA_TELEGRAM_CHAT_ID", "")
+        os.environ.get("EMOLA_TELEGRAM_CHAT_ID", "")
         or os.environ.get("TELEGRAM_ADMIN_CHAT_ID", "")
         or os.environ.get("TELEGRAM_CHAT_ID", "")
+        or get_setting("telegram_admin_chat_id")
+        or ""
     ).strip()
 
 
 def telegram_bot_username():
-    configured = get_setting("telegram_bot_username") or os.environ.get("EMOLA_TELEGRAM_BOT_USERNAME", "shacklebaybot")
-    return configured.strip().lstrip("@")
+    configured = (
+        os.environ.get("EMOLA_TELEGRAM_BOT_USERNAME", "")
+        or get_setting("telegram_bot_username")
+        or "shacklebaybot"
+    )
+    return str(configured).strip().lstrip("@")
 
 
 def initialize_db():
@@ -207,6 +246,13 @@ def initialize_db():
             "INSERT OR IGNORE INTO settings (key, value) VALUES ('signing_key', ?)",
             (secrets.token_urlsafe(48),),
         )
+        file_cfg = read_config_file()
+        for k, v in file_cfg.items():
+            if v:
+                db.execute(
+                    "INSERT OR IGNORE INTO settings (key, value) VALUES (?, ?)",
+                    (k, str(v)),
+                )
         seed_agents(db)
 
 
@@ -785,9 +831,9 @@ def handle_telegram_message(message):
 
     if command == "/start" or clean_lower in {"start", "oi", "ola", "olá", "hi", "hello"}:
         admin_extra = (
-            "\n/setpayment - Configure top-up payment methods\n/seturl - Configure public application URL"
+            "\n/setpayment - Configure top-up payment methods\n/seturl - Configure public application URL\n/botstatus - Check 24/7 bot health & uptime\n/webhook - Configure webhook mode"
             if admin["type"] == "global_admin"
-            else ""
+            else "\n/botstatus - Check bot connection status"
         )
         pm = get_payment_methods()
         till = pm.get("mpesaTill") or pm.get("till") or "Not configured"
@@ -976,6 +1022,71 @@ def handle_telegram_message(message):
             f"🔗 Personal Link:\n"
             f"{personal_link}"
         )
+    elif command in {"/ping"}:
+        reply = "🏓 Pong! E-Mola Bot is online and running full time 24/7."
+    elif command in {"/botstatus", "/status", "/health"}:
+        uptime_sec = int(time.time() - _bot_start_time)
+        hours, remainder = divmod(uptime_sec, 3600)
+        minutes, seconds = divmod(remainder, 60)
+        uptime_str = f"{hours}h {minutes}m {seconds}s" if hours else f"{minutes}m {seconds}s"
+        up_worker = "🟢 Alive" if (_update_thread and _update_thread.is_alive()) else "🔴 Inactive"
+        notif_worker = "🟢 Alive" if (_notification_thread and _notification_thread.is_alive()) else "🔴 Inactive"
+        keep_worker = "🟢 Active (anti-sleep ping every 8 min)" if (_keep_alive_thread and _keep_alive_thread.is_alive()) else "⚪ Disabled"
+        watch_worker = "🟢 Active" if (_supervisor_thread and _supervisor_thread.is_alive()) else "🔴 Inactive"
+        mode_str = "Webhook" if get_setting("use_telegram_webhook") == "1" else "Long Polling (Watchdog Auto-Restart)"
+        reply = (
+            "🤖 Bot 24/7 Health & Uptime Status\n\n"
+            "• Status: 🟢 Online (Full-Time Running)\n"
+            f"• Mode: {mode_str}\n"
+            f"• Uptime: {uptime_str}\n"
+            f"• Base URL: {base_url}\n\n"
+            "👷 Background Workers:\n"
+            f"• Polling Worker: {up_worker}\n"
+            f"• Notification Worker: {notif_worker}\n"
+            f"• Keep-Alive Anti-Sleep: {keep_worker}\n"
+            f"• Watchdog Supervisor: {watch_worker}\n\n"
+            "✅ The bot runs continuously and automatically restarts if any connection drops."
+        )
+    elif command in {"/webhook"}:
+        if admin["type"] != "global_admin":
+            reply = "⛔ Only the administrator can configure webhook settings."
+        else:
+            subparts = parts[1:]
+            action = subparts[0].lower().strip() if subparts else "status"
+            if action in {"on", "enable", "set", "true"}:
+                public_url = get_public_base_url()
+                if not public_url.startswith("https://"):
+                    reply = "⛔ Telegram requires an HTTPS public URL for webhooks. Set your public URL first via /seturl https://your-domain.onrender.com"
+                else:
+                    wh_url = f"{public_url}/api/telegram/webhook"
+                    try:
+                        telegram_api("setWebhook", {"url": wh_url})
+                        set_setting("use_telegram_webhook", "1")
+                        reply = f"✅ Telegram Webhook activated!\nURL: {wh_url}\nUpdates will now be delivered via instant HTTPS push."
+                    except Exception as err:
+                        reply = f"❌ Failed to set webhook: {err}"
+            elif action in {"off", "disable", "delete", "false"}:
+                try:
+                    telegram_api("deleteWebhook", {"drop_pending_updates": False})
+                    set_setting("use_telegram_webhook", "0")
+                    ensure_telegram_threads_running()
+                    reply = "✅ Webhook removed. Switched to 24/7 Long Polling with watchdog auto-recovery."
+                except Exception as err:
+                    reply = f"❌ Failed to delete webhook: {err}"
+            else:
+                try:
+                    wh_info = telegram_api("getWebhookInfo", {})
+                    wh_url = wh_info.get("url") or "None (Long Polling active)"
+                    reply = (
+                        "📡 Webhook Status\n\n"
+                        f"• Active Webhook: {wh_url}\n"
+                        f"• Pending Updates: {wh_info.get('pending_update_count', 0)}\n\n"
+                        "To manage:\n"
+                        "/webhook on - Activate Webhook\n"
+                        "/webhook off - Return to Long Polling"
+                    )
+                except Exception as err:
+                    reply = f"Could not query webhook info: {err}"
     else:
         reply = (
             "❓ Unknown command.\n\n"
@@ -985,7 +1096,9 @@ def handle_telegram_message(message):
             "/stats\n"
             "/pending\n"
             "/topup\n"
-            "/myinfo"
+            "/myinfo\n"
+            "/botstatus\n"
+            "/ping"
         )
 
     send_telegram_message(chat_id, reply)
@@ -1115,14 +1228,62 @@ def handle_verify_callback(query_id, data, chat_id, message_id, message):
             pass
 
 
+_bot_start_time = time.time()
+_update_thread = None
+_notification_thread = None
+_keep_alive_thread = None
+_supervisor_thread = None
+_telegram_lock = threading.Lock()
+_telegram_threads_active = False
+
+
+def is_bot_running():
+    token = telegram_bot_token()
+    if not token:
+        return False
+    return bool(
+        (_update_thread and _update_thread.is_alive())
+        or (_supervisor_thread and _supervisor_thread.is_alive())
+    )
+
+
+def keep_alive_loop():
+    """Background worker that periodically pings the server health endpoint to prevent cloud hosts (e.g. Render free tier) from sleeping."""
+    time.sleep(60)
+    while True:
+        try:
+            public_url = get_public_base_url()
+            if (
+                public_url
+                and public_url.startswith("http")
+                and "127.0.0.1" not in public_url
+                and "localhost" not in public_url
+            ):
+                health_url = f"{public_url}/api/health"
+                req = Request(health_url, headers={"User-Agent": "Emola-KeepAlive/1.0"})
+                with urlopen(req, timeout=20) as resp:
+                    if resp.status == 200:
+                        pass
+        except Exception:
+            pass
+        # Sleep for 8 minutes (480s). Render sleeps at 15m without incoming traffic.
+        time.sleep(480)
+
+
 def telegram_update_loop():
     offset = None
+    consecutive_conflicts = 0
     while True:
+        token = telegram_bot_token()
+        if not token:
+            time.sleep(5)
+            continue
         try:
             payload = {"timeout": 25, "allowed_updates": ["message", "callback_query"]}
             if offset is not None:
                 payload["offset"] = offset
             updates = telegram_api("getUpdates", payload) or []
+            consecutive_conflicts = 0
             for update in updates:
                 if "message" in update:
                     handle_telegram_message(update.get("message") or {})
@@ -1136,25 +1297,86 @@ def telegram_update_loop():
                     error_details += " - " + error.read().decode()
                 except Exception:
                     pass
+            if "webhook is active" in error_details.lower():
+                print("Webhook was active on Telegram; deleting webhook to resume 24/7 polling...")
+                try:
+                    telegram_api("deleteWebhook", {"drop_pending_updates": False})
+                    time.sleep(2)
+                    continue
+                except Exception:
+                    pass
+            if "conflict" in error_details.lower() or "409" in error_details:
+                consecutive_conflicts += 1
+                wait_sec = min(30, 5 * consecutive_conflicts)
+                print(f"Telegram polling conflict ({error_details}). Waiting {wait_sec}s for session to clear...")
+                time.sleep(wait_sec)
+                continue
+
             print(f"Telegram update polling failed ({type(error).__name__}: {error_details}); retrying.")
             time.sleep(5)
 
 
-_telegram_threads_active = False
-_telegram_lock = threading.Lock()
+def telegram_supervisor_loop():
+    """Watchdog supervisor that monitors all bot worker threads and automatically revives any that stopped."""
+    global _update_thread, _notification_thread, _keep_alive_thread, _telegram_threads_active
+    while True:
+        try:
+            token = telegram_bot_token()
+            if token:
+                with _telegram_lock:
+                    if get_setting("use_telegram_webhook") != "1":
+                        if _update_thread is None or not _update_thread.is_alive():
+                            print("[Watchdog] Reviving Telegram polling worker...")
+                            _update_thread = threading.Thread(
+                                target=telegram_update_loop, daemon=True, name="TgUpdateWorker"
+                            )
+                            _update_thread.start()
+                    if _notification_thread is None or not _notification_thread.is_alive():
+                        print("[Watchdog] Reviving Telegram notification worker...")
+                        _notification_thread = threading.Thread(
+                            target=telegram_notification_loop, daemon=True, name="TgNotifyWorker"
+                        )
+                        _notification_thread.start()
+                    if _keep_alive_thread is None or not _keep_alive_thread.is_alive():
+                        _keep_alive_thread = threading.Thread(
+                            target=keep_alive_loop, daemon=True, name="TgKeepAlive"
+                        )
+                        _keep_alive_thread.start()
+                    _telegram_threads_active = True
+        except Exception as error:
+            print(f"[Watchdog] Supervisor error: {error}")
+        time.sleep(15)
 
 
 def ensure_telegram_threads_running():
-    global _telegram_threads_active
+    global _supervisor_thread, _update_thread, _notification_thread, _keep_alive_thread, _telegram_threads_active
     token = telegram_bot_token()
     if not token:
         return False
     with _telegram_lock:
-        if not _telegram_threads_active:
-            threading.Thread(target=telegram_update_loop, daemon=True).start()
-            threading.Thread(target=telegram_notification_loop, daemon=True).start()
-            _telegram_threads_active = True
-            print("Telegram bot polling and notification workers started.")
+        if get_setting("use_telegram_webhook") != "1":
+            if _update_thread is None or not _update_thread.is_alive():
+                _update_thread = threading.Thread(
+                    target=telegram_update_loop, daemon=True, name="TgUpdateWorker"
+                )
+                _update_thread.start()
+        if _notification_thread is None or not _notification_thread.is_alive():
+            _notification_thread = threading.Thread(
+                target=telegram_notification_loop, daemon=True, name="TgNotifyWorker"
+            )
+            _notification_thread.start()
+        if _keep_alive_thread is None or not _keep_alive_thread.is_alive():
+            _keep_alive_thread = threading.Thread(
+                target=keep_alive_loop, daemon=True, name="TgKeepAlive"
+            )
+            _keep_alive_thread.start()
+        if _supervisor_thread is None or not _supervisor_thread.is_alive():
+            _supervisor_thread = threading.Thread(
+                target=telegram_supervisor_loop, daemon=True, name="TgSupervisor"
+            )
+            _supervisor_thread.start()
+            print("Telegram 24/7 background supervisor, polling, and keep-alive workers started.")
+        _telegram_threads_active = True
         return True
 
 
@@ -1376,6 +1598,8 @@ class Handler(BaseHTTPRequestHandler):
         path = urlsplit(self.path).path
         if path == "/api/health":
             return self.send_json(200, {"status": "ok"})
+        if path == "/api/telegram/webhook":
+            return self.send_json(200, {"ok": True, "status": "Telegram webhook endpoint ready"})
         if path == "/api/agent/leads":
             return self.agent_leads()
         if path == "/api/agent/me":
@@ -1451,6 +1675,8 @@ class Handler(BaseHTTPRequestHandler):
             data = self.read_json()
         except (ValueError, json.JSONDecodeError):
             return self.send_json(400, {"error": "Invalid JSON request"})
+        if path == "/api/telegram/webhook":
+            return self.telegram_webhook(data)
         if path == "/api/admin/settings":
             return self.update_admin_settings(data)
         if path == "/api/admin/agents":
@@ -1475,6 +1701,18 @@ class Handler(BaseHTTPRequestHandler):
                 return self.submit_verification(parts[3], data)
         return self.send_json(404, {"error": "Not found"})
 
+    def telegram_webhook(self, data):
+        if not data or not isinstance(data, dict):
+            return self.send_json(200, {"ok": True})
+        try:
+            if "message" in data:
+                handle_telegram_message(data.get("message") or {})
+            elif "callback_query" in data:
+                handle_telegram_callback(data.get("callback_query") or {})
+        except Exception as error:
+            print(f"Error processing Telegram webhook payload: {error}")
+        return self.send_json(200, {"ok": True})
+
     def get_admin_settings(self):
         if not self.authorized(ADMIN_TOKEN):
             return self.send_json(401, {"error": "Unauthorized"})
@@ -1483,6 +1721,7 @@ class Handler(BaseHTTPRequestHandler):
         if origin_val and not ("127.0.0.1" in origin_val or "localhost" in origin_val):
             set_setting("public_url", origin_val.strip().rstrip("/"))
             set_setting("last_seen_host", origin_val.strip().rstrip("/"))
+        ensure_telegram_threads_running()
         token = telegram_bot_token()
         masked_token = (token[:6] + "..." + token[-4:]) if len(token) > 10 else ("Configured" if token else "")
         payment_methods = get_payment_methods()
@@ -1494,7 +1733,7 @@ class Handler(BaseHTTPRequestHandler):
                 "maskedBotToken": masked_token,
                 "adminChatId": telegram_admin_chat_id(),
                 "botUsername": telegram_bot_username(),
-                "botRunning": _telegram_threads_active,
+                "botRunning": is_bot_running(),
                 "paymentMethods": payment_methods,
                 "publicAppUrl": public_url,
             },
@@ -1528,7 +1767,7 @@ class Handler(BaseHTTPRequestHandler):
             set_setting("payment_methods", json.dumps(data["paymentMethods"]))
 
         running = ensure_telegram_threads_running()
-        return self.send_json(200, {"ok": True, "botRunning": running or _telegram_threads_active})
+        return self.send_json(200, {"ok": True, "botRunning": is_bot_running()})
 
     def list_agents(self):
         if not self.authorized(ADMIN_TOKEN):

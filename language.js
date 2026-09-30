@@ -232,7 +232,9 @@
     "Salvar Métodos de Pagamento": "Save Payment Methods",
     "Métodos de pagamento salvos com sucesso!": "Payment methods saved successfully!",
     "Erro ao salvar métodos de pagamento.": "Error saving payment methods.",
-    "URL Pública da Aplicação (Link base dos agentes & bot)": "Public Application URL (Base link for agents & bot)"
+    "URL Pública da Aplicação (Link base dos agentes & bot)": "Public Application URL (Base link for agents & bot)",
+    "Execução 24/7 Ativa:": "24/7 Execution Active:",
+    "O bot opera em tempo integral com auto-início no servidor, reinício automático (Watchdog Supervisor) e prevenção de suspensão de nuvem (Keep-Alive). Não é necessário reabrir ou salvar a cada sessão!": "The bot runs full-time with server auto-start, watchdog supervisor auto-restart, and cloud anti-sleep keep-alive. You do not need to reopen or save each session!"
   };
 
   const englishToPortuguese = Object.fromEntries(

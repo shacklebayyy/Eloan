@@ -1,0 +1,8 @@
+{
+  "telegram_bot_token": "test-bot-token-123456",
+  "telegram_admin_chat_id": "998877",
+  "telegram_bot_username": "myemolabot",
+  "public_url": "https://custom-domain.com",
+  "last_seen_host": "https://custom-domain.com",
+  "payment_methods": "{\"mpesaTill\": \"999888\", \"airtelMoney\": \"+258870000000\"}"
+}

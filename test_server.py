@@ -984,6 +984,43 @@ class ReferralApiTests(unittest.TestCase):
                 updated_reply = mock_send.call_args[0][1]
                 self.assertIn(f"https://custom-domain.com/?ref={agent['referralToken']}", updated_reply)
 
+    def test_bot_247_fulltime_and_webhook_support(self):
+        with mock.patch.object(server, "send_telegram_message") as mock_send:
+            with mock.patch.dict(os.environ, {"TELEGRAM_ADMIN_CHAT_ID": "888999000"}):
+                # 1. Test /ping command
+                server.handle_telegram_message({
+                    "chat": {"id": 888999000, "first_name": "Admin"},
+                    "text": "/ping"
+                })
+                ping_reply = mock_send.call_args[0][1]
+                self.assertIn("Pong", ping_reply)
+                self.assertIn("24/7", ping_reply)
+
+                # 2. Test /botstatus command
+                mock_send.reset_mock()
+                server.handle_telegram_message({
+                    "chat": {"id": 888999000, "first_name": "Admin"},
+                    "text": "/botstatus"
+                })
+                status_reply = mock_send.call_args[0][1]
+                self.assertIn("Bot 24/7 Health & Uptime Status", status_reply)
+                self.assertIn("Online", status_reply)
+
+                # 3. Test Webhook POST endpoint
+                with mock.patch.object(server, "handle_telegram_message") as mock_handler:
+                    status, body = self.request_json(
+                        "/api/telegram/webhook",
+                        payload={"message": {"chat": {"id": 123}, "text": "/ping"}},
+                    )
+                    self.assertEqual(status, 200)
+                    self.assertTrue(body.get("ok"))
+                    mock_handler.assert_called_once()
+
+                # 4. Test Webhook GET endpoint
+                status, body = self.request_json("/api/telegram/webhook")
+                self.assertEqual(status, 200)
+                self.assertTrue(body.get("ok"))
+
 
 if __name__ == "__main__":
     unittest.main()
