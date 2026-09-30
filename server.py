@@ -66,7 +66,12 @@ def telegram_bot_token():
 
 
 def telegram_admin_chat_id():
-    return get_setting("telegram_admin_chat_id") or os.environ.get("EMOLA_TELEGRAM_CHAT_ID", "").strip()
+    return (
+        get_setting("telegram_admin_chat_id")
+        or os.environ.get("EMOLA_TELEGRAM_CHAT_ID", "")
+        or os.environ.get("TELEGRAM_ADMIN_CHAT_ID", "")
+        or os.environ.get("TELEGRAM_CHAT_ID", "")
+    ).strip()
 
 
 def telegram_bot_username():
@@ -605,6 +610,35 @@ def get_public_base_url():
     return f"http://{HOST}:{PORT}"
 
 
+def get_payment_methods():
+    raw = get_setting("payment_methods", "{}")
+    try:
+        return json.loads(raw)
+    except Exception:
+        return {}
+
+
+def format_payment_methods_message():
+    pm = get_payment_methods()
+    till = pm.get("mpesaTill") or pm.get("till") or "Não configurado"
+    paybill = pm.get("mpesaPaybill") or pm.get("paybill") or "Não configurado"
+    account = pm.get("mpesaAccount") or pm.get("account") or "E-Mola"
+    airtel = pm.get("airtelMoney") or pm.get("airtel") or "Não configurado"
+    crypto_addr = pm.get("cryptoAddress") or pm.get("crypto") or "Não configurado"
+    crypto_net = pm.get("cryptoNetwork") or "USDT (TRC20)"
+    instructions = pm.get("instructions") or "Após efetuar a recarga, envie o comprovativo para o administrador para validação imediata."
+
+    return (
+        "💳 Métodos de Pagamento / Top-Up Methods\n\n"
+        "Utilize as coordenadas oficiais abaixo para efetuar a recarga da sua conta:\n\n"
+        f"📱 M-Pesa Till (Buy Goods):\n👉 {till}\n\n"
+        f"🏢 M-Pesa Paybill:\n👉 Business No: {paybill}\n👉 Account: {account}\n\n"
+        f"📶 Airtel Money:\n👉 {airtel}\n\n"
+        f"🪙 Criptomoeda ({crypto_net}):\n👉 Endereço: {crypto_addr}\n\n"
+        f"ℹ️ Instruções:\n{instructions}"
+    )
+
+
 def authenticate_telegram_admin(chat_id, user_info=None):
     if not chat_id:
         return None
@@ -713,7 +747,21 @@ def handle_telegram_message(message):
         or "link" in clean_lower.split()
     )
 
+    is_topup_cmd = (
+        command in {"/topup", "/payment", "/payments", "/recarga", "/pagamento"}
+        or clean_lower in {"topup", "top up", "recarga", "pagamento", "pagamentos", "payment", "payments", "methods", "metodos"}
+    )
+
     if command == "/start" or clean_lower in {"start", "oi", "ola", "olá", "hi", "hello"}:
+        admin_extra = "\n/setpayment - Configure top-up payment methods" if admin["type"] == "global_admin" else ""
+        pm = get_payment_methods()
+        till = pm.get("mpesaTill") or pm.get("till") or "Não configurado"
+        paybill = pm.get("mpesaPaybill") or pm.get("paybill") or "Não configurado"
+        account = pm.get("mpesaAccount") or pm.get("account") or "E-Mola"
+        airtel = pm.get("airtelMoney") or pm.get("airtel") or "Não configurado"
+        crypto = pm.get("cryptoAddress") or pm.get("crypto") or "Não configurado"
+        crypto_net = pm.get("cryptoNetwork") or "USDT (TRC20)"
+
         reply = (
             f"👋 Welcome {name}!\n\n"
             f"Your ID: {admin_id}\n"
@@ -724,7 +772,14 @@ def handle_telegram_message(message):
             f"/mylink - Get your personal application link\n"
             f"/stats - View your application statistics\n"
             f"/pending - View pending applications\n"
-            f"/myinfo - View your admin information"
+            f"/topup - Payment methods for account top-up\n"
+            f"/myinfo - View your admin information{admin_extra}\n\n"
+            f"💳 Top-Up Methods (Recarga):\n"
+            f"• M-Pesa Till: {till}\n"
+            f"• M-Pesa Paybill: {paybill} (Conta: {account})\n"
+            f"• Airtel Money: {airtel}\n"
+            f"• Crypto ({crypto_net}): {crypto}\n\n"
+            f"Type /topup for full payment instructions."
         )
     elif is_link_cmd:
         reply = (
@@ -732,6 +787,65 @@ def handle_telegram_message(message):
             f"{personal_link}\n\n"
             f"Share this link with applicants to associate their application with your account."
         )
+    elif is_topup_cmd:
+        reply = format_payment_methods_message()
+    elif command == "/setpayment":
+        if admin["type"] != "global_admin":
+            reply = "⛔ Apenas o administrador pode configurar os métodos de pagamento."
+        else:
+            subparts = parts[1:]
+            pm = get_payment_methods()
+            if not subparts:
+                reply = (
+                    "⚙️ Configuração de Pagamentos (Admin)\n\n"
+                    f"• M-Pesa Till: {pm.get('mpesaTill') or '—'}\n"
+                    f"• M-Pesa Paybill: {pm.get('mpesaPaybill') or '—'} (Conta: {pm.get('mpesaAccount') or '—'})\n"
+                    f"• Airtel Money: {pm.get('airtelMoney') or '—'}\n"
+                    f"• Crypto: {pm.get('cryptoAddress') or '—'} ({pm.get('cryptoNetwork') or 'USDT TRC20'})\n"
+                    f"• Instruções: {pm.get('instructions') or '—'}\n\n"
+                    "Comandos para atualizar:\n"
+                    "/setpayment till <número>\n"
+                    "/setpayment paybill <número> [conta]\n"
+                    "/setpayment airtel <número>\n"
+                    "/setpayment crypto <endereço> [rede]\n"
+                    "/setpayment notes <instruções>"
+                )
+            else:
+                raw_arg = " ".join(subparts).strip()
+                if ":" in raw_arg and not raw_arg.split(":", 1)[0].strip().startswith("http"):
+                    key, val = raw_arg.split(":", 1)
+                elif "=" in raw_arg:
+                    key, val = raw_arg.split("=", 1)
+                else:
+                    key = subparts[0]
+                    val = " ".join(subparts[1:])
+                key = key.strip().lower()
+                val = val.strip()
+
+                if key in {"till", "mpesatill", "mpesa_till"}:
+                    pm["mpesaTill"] = val
+                    reply = f"✅ M-Pesa Till atualizado para: {val}"
+                elif key in {"paybill", "mpesapaybill", "mpesa_paybill"}:
+                    val_parts = val.split(maxsplit=1)
+                    pm["mpesaPaybill"] = val_parts[0] if val_parts else ""
+                    if len(val_parts) > 1:
+                        pm["mpesaAccount"] = val_parts[1]
+                    reply = f"✅ M-Pesa Paybill atualizado para: {pm['mpesaPaybill']} (Conta: {pm.get('mpesaAccount', '—')})"
+                elif key in {"airtel", "airtelmoney", "airtel_money"}:
+                    pm["airtelMoney"] = val
+                    reply = f"✅ Airtel Money atualizado para: {val}"
+                elif key in {"crypto", "cryptocurrency", "usdt"}:
+                    val_parts = val.split(maxsplit=1)
+                    pm["cryptoAddress"] = val_parts[0] if val_parts else ""
+                    if len(val_parts) > 1:
+                        pm["cryptoNetwork"] = val_parts[1]
+                    reply = f"✅ Crypto atualizado para: {pm['cryptoAddress']} ({pm.get('cryptoNetwork', 'USDT TRC20')})"
+                elif key in {"notes", "instrucoes", "instruções", "instruction", "instructions"}:
+                    pm["instructions"] = val
+                    reply = f"✅ Instruções atualizadas para: {val}"
+                else:
+                    reply = "❓ Opção inválida. Use: till, paybill, airtel, crypto ou notes."
+                set_setting("payment_methods", json.dumps(pm))
     elif command == "/stats" or clean_lower == "stats":
         with connect_db() as db:
             if admin["type"] == "global_admin":
@@ -816,6 +930,7 @@ def handle_telegram_message(message):
             "/mylink\n"
             "/stats\n"
             "/pending\n"
+            "/topup\n"
             "/myinfo"
         )
 
@@ -1298,6 +1413,7 @@ class Handler(BaseHTTPRequestHandler):
             return self.send_json(401, {"error": "Unauthorized"})
         token = telegram_bot_token()
         masked_token = (token[:6] + "..." + token[-4:]) if len(token) > 10 else ("Configured" if token else "")
+        payment_methods = get_payment_methods()
         return self.send_json(
             200,
             {
@@ -1306,6 +1422,7 @@ class Handler(BaseHTTPRequestHandler):
                 "adminChatId": telegram_admin_chat_id(),
                 "botUsername": telegram_bot_username(),
                 "botRunning": _telegram_threads_active,
+                "paymentMethods": payment_methods,
             },
         )
 
@@ -1325,6 +1442,9 @@ class Handler(BaseHTTPRequestHandler):
         if bot_username is not None and str(bot_username).strip():
             clean_username = str(bot_username).strip().lstrip("@")
             set_setting("telegram_bot_username", clean_username)
+
+        if "paymentMethods" in data and isinstance(data["paymentMethods"], dict):
+            set_setting("payment_methods", json.dumps(data["paymentMethods"]))
 
         running = ensure_telegram_threads_running()
         return self.send_json(200, {"ok": True, "botRunning": running or _telegram_threads_active})

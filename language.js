@@ -219,7 +219,19 @@
     "Digite a mensagem ou aviso que deseja enviar para o(s) agente(s)...": "Enter the message or notice to send to agent(s)...",
     "Enviar Mensagem via Telegram": "Send Message via Telegram",
     "Mensagem": "Message",
-    "Ações": "Actions"
+    "Ações": "Actions",
+    "Métodos de Pagamento & Recargas (Top-Up)": "Payment Methods & Top-Up",
+    "Configure as coordenadas de pagamento oficiais (M-Pesa Till, Paybill, Airtel Money e Crypto) para que os agentes possam recarregar as suas contas através do comando <code>/topup</code> no Telegram.": "Configure official payment details (M-Pesa Till, Paybill, Airtel Money, and Crypto) so agents can top up their accounts using the /topup command in Telegram.",
+    "M-Pesa Till (Buy Goods)": "M-Pesa Till (Buy Goods)",
+    "M-Pesa Paybill (Business No)": "M-Pesa Paybill (Business No)",
+    "M-Pesa Conta / Referência": "M-Pesa Account / Reference",
+    "Airtel Money": "Airtel Money",
+    "Endereço de Criptomoeda (USDT / Crypto)": "Cryptocurrency Address (USDT / Crypto)",
+    "Rede da Criptomoeda": "Cryptocurrency Network",
+    "Instruções de Recarga para os Agentes": "Top-Up Instructions for Agents",
+    "Salvar Métodos de Pagamento": "Save Payment Methods",
+    "Métodos de pagamento salvos com sucesso!": "Payment methods saved successfully!",
+    "Erro ao salvar métodos de pagamento.": "Error saving payment methods."
   };
 
   const englishToPortuguese = Object.fromEntries(

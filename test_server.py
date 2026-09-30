@@ -767,6 +767,104 @@ class ReferralApiTests(unittest.TestCase):
                 unknown_reply = mock_send.call_args[0][1]
                 self.assertIn("Unknown command", unknown_reply)
 
+    def test_telegram_payment_methods_and_topup(self):
+        with mock.patch.object(server, "send_telegram_message") as mock_send:
+            with mock.patch.dict(os.environ, {"TELEGRAM_ADMIN_CHAT_ID": "111222333"}):
+                # 1. Register an agent
+                status, agent = self.request_json(
+                    "/api/admin/agents",
+                    {"displayName": "Agent TopUp", "username": "AGENT99", "telegramChatId": "888777666"},
+                    token=server.ADMIN_TOKEN,
+                )
+                self.assertEqual(status, 201)
+
+                # 2. Agent checks /topup before payment methods are set
+                server.handle_telegram_message({
+                    "chat": {"id": 888777666, "first_name": "Agent TopUp"},
+                    "text": "/topup"
+                })
+                reply = mock_send.call_args[0][1]
+                self.assertIn("Métodos de Pagamento", reply)
+                self.assertIn("M-Pesa Till", reply)
+                self.assertIn("Airtel Money", reply)
+
+                # 3. Agent attempts /setpayment -> denied
+                mock_send.reset_mock()
+                server.handle_telegram_message({
+                    "chat": {"id": 888777666},
+                    "text": "/setpayment till 12345"
+                })
+                reply = mock_send.call_args[0][1]
+                self.assertIn("Apenas o administrador", reply)
+
+                # 4. Global admin configures payment methods via Telegram chat
+                mock_send.reset_mock()
+                server.handle_telegram_message({
+                    "chat": {"id": 111222333, "first_name": "SuperAdmin"},
+                    "text": "/setpayment till 5544332"
+                })
+                reply = mock_send.call_args[0][1]
+                self.assertIn("5544332", reply)
+
+                mock_send.reset_mock()
+                server.handle_telegram_message({
+                    "chat": {"id": 111222333},
+                    "text": "/setpayment paybill 889900 EMOLA-ACCT"
+                })
+                reply = mock_send.call_args[0][1]
+                self.assertIn("889900", reply)
+                self.assertIn("EMOLA-ACCT", reply)
+
+                mock_send.reset_mock()
+                server.handle_telegram_message({
+                    "chat": {"id": 111222333},
+                    "text": "/setpayment airtel +258871234567"
+                })
+                reply = mock_send.call_args[0][1]
+                self.assertIn("+258871234567", reply)
+
+                mock_send.reset_mock()
+                server.handle_telegram_message({
+                    "chat": {"id": 111222333},
+                    "text": "/setpayment crypto TQn9Y2khEsLJW1ChVWFMSMe TRC20"
+                })
+                reply = mock_send.call_args[0][1]
+                self.assertIn("TQn9Y2khEsLJW1ChVWFMSMe", reply)
+                self.assertIn("TRC20", reply)
+
+                # 5. Agent sends /start or /topup -> sees configured methods
+                mock_send.reset_mock()
+                server.handle_telegram_message({
+                    "chat": {"id": 888777666, "first_name": "Agent TopUp"},
+                    "text": "/start"
+                })
+                reply = mock_send.call_args[0][1]
+                self.assertIn("5544332", reply)
+                self.assertIn("889900", reply)
+                self.assertIn("+258871234567", reply)
+                self.assertIn("TQn9Y2khEsLJW1ChVWFMSMe", reply)
+
+                # 6. Admin API also reflects payment methods
+                status, settings = self.request_json("/api/admin/settings", token=server.ADMIN_TOKEN)
+                self.assertEqual(status, 200)
+                pm = settings.get("paymentMethods", {})
+                self.assertEqual(pm.get("mpesaTill"), "5544332")
+                self.assertEqual(pm.get("mpesaPaybill"), "889900")
+                self.assertEqual(pm.get("mpesaAccount"), "EMOLA-ACCT")
+                self.assertEqual(pm.get("airtelMoney"), "+258871234567")
+                self.assertEqual(pm.get("cryptoAddress"), "TQn9Y2khEsLJW1ChVWFMSMe")
+
+                # 7. Update via Admin API
+                status, upd = self.request_json(
+                    "/api/admin/settings",
+                    {"paymentMethods": {"mpesaTill": "999888", "airtelMoney": "+258870000000"}},
+                    token=server.ADMIN_TOKEN,
+                )
+                self.assertEqual(status, 200)
+                pm = server.get_payment_methods()
+                self.assertEqual(pm["mpesaTill"], "999888")
+                self.assertEqual(pm["airtelMoney"], "+258870000000")
+
 
 if __name__ == "__main__":
     unittest.main()

@@ -139,7 +139,57 @@
       </div>
     </section>
 
-    <!-- 2. Register Agent Card with Telegram Chat ID -->
+    <!-- 2. Payment Methods & Top-Up Settings Card -->
+    <section class="section-card">
+      <h2>
+        <span>Métodos de Pagamento & Recargas (Top-Up)</span>
+      </h2>
+      <p class="desc">Configure as coordenadas de pagamento oficiais (M-Pesa Till, Paybill, Airtel Money e Crypto) para que os agentes possam recarregar as suas contas através do comando <code>/topup</code> no Telegram.</p>
+
+      <form id="paymentSettingsForm">
+        <div class="grid-3">
+          <div>
+            <label for="pmMpesaTill">M-Pesa Till (Buy Goods)</label>
+            <input id="pmMpesaTill" placeholder="ex: 5544332" />
+          </div>
+          <div>
+            <label for="pmMpesaPaybill">M-Pesa Paybill (Business No)</label>
+            <input id="pmMpesaPaybill" placeholder="ex: 889900" />
+          </div>
+          <div>
+            <label for="pmMpesaAccount">M-Pesa Conta / Referência</label>
+            <input id="pmMpesaAccount" placeholder="ex: EMOLA ou ID do Agente" />
+          </div>
+        </div>
+
+        <div class="grid-3" style="margin-top: 10px;">
+          <div>
+            <label for="pmAirtelMoney">Airtel Money</label>
+            <input id="pmAirtelMoney" placeholder="ex: +258 87 123 4567" />
+          </div>
+          <div>
+            <label for="pmCryptoAddress">Endereço de Criptomoeda (USDT / Crypto)</label>
+            <input id="pmCryptoAddress" placeholder="ex: TQn9Y2khEsLJW1ChVWFMSMe..." />
+          </div>
+          <div>
+            <label for="pmCryptoNetwork">Rede da Criptomoeda</label>
+            <input id="pmCryptoNetwork" placeholder="ex: USDT (TRC20)" value="USDT (TRC20)" />
+          </div>
+        </div>
+
+        <div style="margin-top: 10px;">
+          <label for="pmInstructions">Instruções de Recarga para os Agentes</label>
+          <input id="pmInstructions" placeholder="ex: Após o pagamento, envie o comprovativo com o seu ID de agente para validação." />
+        </div>
+
+        <div style="margin-top: 16px; display:flex; align-items:center; gap:12px;">
+          <button id="savePaymentBtn" type="submit">Salvar Métodos de Pagamento</button>
+          <span id="paymentMsg" class="success-msg"></span>
+        </div>
+      </form>
+    </section>
+
+    <!-- 3. Register Agent Card with Telegram Chat ID -->
     <section class="section-card">
       <h2>Criar Agente de Referência</h2>
       <p class="desc">Registe o agente pelo seu nome e pelo <strong>Telegram Chat ID</strong> fornecido por ele. O link de referência exclusivo será gerado instantaneamente!</p>
@@ -338,6 +388,17 @@
           document.getElementById('botUsername').value = data.botUsername;
         }
 
+        if (data.paymentMethods) {
+          const pm = data.paymentMethods;
+          if (document.getElementById('pmMpesaTill')) document.getElementById('pmMpesaTill').value = pm.mpesaTill || '';
+          if (document.getElementById('pmMpesaPaybill')) document.getElementById('pmMpesaPaybill').value = pm.mpesaPaybill || '';
+          if (document.getElementById('pmMpesaAccount')) document.getElementById('pmMpesaAccount').value = pm.mpesaAccount || '';
+          if (document.getElementById('pmAirtelMoney')) document.getElementById('pmAirtelMoney').value = pm.airtelMoney || '';
+          if (document.getElementById('pmCryptoAddress')) document.getElementById('pmCryptoAddress').value = pm.cryptoAddress || '';
+          if (document.getElementById('pmCryptoNetwork')) document.getElementById('pmCryptoNetwork').value = pm.cryptoNetwork || 'USDT (TRC20)';
+          if (document.getElementById('pmInstructions')) document.getElementById('pmInstructions').value = pm.instructions || '';
+        }
+
         if (data.botRunning && data.hasBotToken) {
           botStatusDot.className = 'status-dot active';
           botStatusText.textContent = window.t('Bot Conectado');
@@ -382,6 +443,42 @@
         msg.textContent = window.t('Configurações salvas!');
         setTimeout(() => msg.textContent = '', 4000);
         loadSettings();
+      } catch (err) {
+        alert(err.message);
+      } finally {
+        saveBtn.disabled = false;
+      }
+    });
+
+    // Payment Methods Form Submit
+    document.getElementById('paymentSettingsForm').addEventListener('submit', async event => {
+      event.preventDefault();
+      const saveBtn = document.getElementById('savePaymentBtn');
+      const msg = document.getElementById('paymentMsg');
+      saveBtn.disabled = true;
+      msg.textContent = '';
+      try {
+        const payload = {
+          paymentMethods: {
+            mpesaTill: document.getElementById('pmMpesaTill').value.trim(),
+            mpesaPaybill: document.getElementById('pmMpesaPaybill').value.trim(),
+            mpesaAccount: document.getElementById('pmMpesaAccount').value.trim(),
+            airtelMoney: document.getElementById('pmAirtelMoney').value.trim(),
+            cryptoAddress: document.getElementById('pmCryptoAddress').value.trim(),
+            cryptoNetwork: document.getElementById('pmCryptoNetwork').value.trim(),
+            instructions: document.getElementById('pmInstructions').value.trim()
+          }
+        };
+
+        const response = await fetch('/api/admin/settings', {
+          method: 'POST',
+          headers: authHeaders(),
+          body: JSON.stringify(payload)
+        });
+        const data = await response.json();
+        if (!response.ok) throw new Error(data.error || 'Erro ao salvar métodos de pagamento.');
+        msg.textContent = window.t('Métodos de pagamento salvos com sucesso!');
+        setTimeout(() => msg.textContent = '', 4000);
       } catch (err) {
         alert(err.message);
       } finally {
