@@ -700,7 +700,7 @@ class ReferralApiTests(unittest.TestCase):
                 self.assertIn("Welcome ikt!", start_reply)
                 self.assertIn("ADMIN144", start_reply)
                 self.assertIn("Role: 👤 Admin", start_reply)
-                self.assertIn("https://z-pgx8.onrender.com?admin=ADMIN144", start_reply)
+                self.assertIn("?ref=ADMIN144", start_reply)
                 self.assertIn("/mylink", start_reply)
                 self.assertIn("/stats", start_reply)
                 self.assertIn("/pending", start_reply)
@@ -714,7 +714,17 @@ class ReferralApiTests(unittest.TestCase):
                 })
                 mylink_reply = mock_send.call_args[0][1]
                 self.assertIn("Your Personal Link", mylink_reply)
-                self.assertIn("https://z-pgx8.onrender.com?admin=ADMIN144", mylink_reply)
+                self.assertIn("?ref=ADMIN144", mylink_reply)
+
+                # 4b. Test asking with plain word "link"
+                mock_send.reset_mock()
+                server.handle_telegram_message({
+                    "chat": {"id": 77665544},
+                    "text": "link"
+                })
+                plain_link_reply = mock_send.call_args[0][1]
+                self.assertIn("Your Personal Link", plain_link_reply)
+                self.assertIn("?ref=ADMIN144", plain_link_reply)
 
                 # 5. Authorized /stats
                 mock_send.reset_mock()

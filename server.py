@@ -590,10 +590,19 @@ def mask_phone_number(phone):
 
 
 def get_public_base_url():
-    configured = get_setting("public_url") or os.environ.get("PUBLIC_URL")
+    configured = (
+        get_setting("public_url")
+        or get_setting("app_url")
+        or os.environ.get("PUBLIC_URL")
+        or os.environ.get("APP_URL")
+    )
     if configured:
         return configured.strip().rstrip("/")
-    return "https://z-pgx8.onrender.com"
+    last_host = get_setting("last_seen_host")
+    if last_host:
+        proto = "http" if ("localhost" in last_host or "127.0.0.1" in last_host) else "https"
+        return f"{proto}://{last_host}".rstrip("/")
+    return f"http://{HOST}:{PORT}"
 
 
 def authenticate_telegram_admin(chat_id, user_info=None):
@@ -606,7 +615,7 @@ def authenticate_telegram_admin(chat_id, user_info=None):
 
     # 1. Global Admin Check
     if configured_chat and str_chat_id == str(configured_chat).strip():
-        admin_id = get_setting("admin_custom_id") or "ADMIN144"
+        admin_id = get_setting("admin_custom_id") or "Admin"
         return {
             "type": "global_admin",
             "admin_id": admin_id,
@@ -619,22 +628,20 @@ def authenticate_telegram_admin(chat_id, user_info=None):
     # 2. Registered Agent / Admin in DB
     with connect_db() as db:
         agent = db.execute(
-            """SELECT id, display_name, username, telegram_chat_id, status
+            """SELECT id, display_name, username, referral_code, telegram_chat_id, status
                FROM agents
                WHERE telegram_chat_id = ? AND status = 'active'""",
             (str_chat_id,),
         ).fetchone()
         if agent:
             raw_user = (agent["username"] or "").strip()
-            if raw_user.upper().startswith("ADMIN"):
-                admin_id = raw_user.upper()
-            else:
-                admin_id = f"ADMIN{agent['id'][:6].upper()}"
+            admin_id = raw_user if raw_user else f"AGENT_{agent['id'][:6].upper()}"
+            role = "👤 Admin" if "admin" in raw_user.lower() else "👤 Agent"
             return {
                 "type": "agent_admin",
                 "admin_id": admin_id,
                 "display_name": agent["display_name"] or first_name,
-                "role": "👤 Admin",
+                "role": role,
                 "status": "Active",
                 "agent_id": agent["id"],
                 "raw_agent": agent,
@@ -687,14 +694,30 @@ def handle_telegram_message(message):
 
     admin_id = admin["admin_id"]
     name = admin["display_name"]
+    role = admin.get("role", "👤 Agent")
     base_url = get_public_base_url()
-    personal_link = f"{base_url}?admin={admin_id}"
 
-    if command == "/start":
+    # Form the actual referral link of the agent / admin in our system
+    if admin.get("agent_id"):
+        ref_code = create_referral_token(admin["agent_id"])
+        personal_link = f"{base_url}/?ref={ref_code}"
+    else:
+        admin_ref = get_setting("admin_custom_id") or "admin"
+        personal_link = f"{base_url}/?admin={admin_ref}"
+
+    clean_lower = text.lower().strip()
+    is_link_cmd = (
+        command in {"/mylink", "/link"}
+        or clean_lower in {"link", "my link", "meu link", "link do agente", "send link", "get link", "copiar link", "pegar link"}
+        or clean_lower.startswith("link ")
+        or "link" in clean_lower.split()
+    )
+
+    if command == "/start" or clean_lower in {"start", "oi", "ola", "olá", "hi", "hello"}:
         reply = (
             f"👋 Welcome {name}!\n\n"
-            f"Your Admin ID: {admin_id}\n"
-            f"Role: 👤 Admin\n\n"
+            f"Your ID: {admin_id}\n"
+            f"Role: {role}\n\n"
             f"Your Personal Link:\n"
             f"{personal_link}\n\n"
             f"Commands:\n\n"
@@ -703,13 +726,13 @@ def handle_telegram_message(message):
             f"/pending - View pending applications\n"
             f"/myinfo - View your admin information"
         )
-    elif command == "/mylink":
+    elif is_link_cmd:
         reply = (
             f"🔗 Your Personal Link\n\n"
             f"{personal_link}\n\n"
-            f"Share this link with applicants to associate their application with your administrator account."
+            f"Share this link with applicants to associate their application with your account."
         )
-    elif command == "/stats":
+    elif command == "/stats" or clean_lower == "stats":
         with connect_db() as db:
             if admin["type"] == "global_admin":
                 rows = db.execute(
@@ -736,7 +759,7 @@ def handle_telegram_message(message):
             f"✅ Approved: {approved}\n"
             f"❌ Rejected: {rejected}"
         )
-    elif command == "/pending":
+    elif command == "/pending" or clean_lower == "pending":
         with connect_db() as db:
             if admin["type"] == "global_admin":
                 rows = db.execute(
@@ -776,11 +799,11 @@ def handle_telegram_message(message):
                     f"📌 Status: Pending"
                 )
             reply = "\n\n──────────────────\n\n".join(items)
-    elif command == "/myinfo":
+    elif command == "/myinfo" or clean_lower in {"myinfo", "info"}:
         reply = (
             f"👤 Your Information\n\n"
             f"Admin ID: {admin_id}\n"
-            f"Role: 👤 Admin\n"
+            f"Role: {role}\n"
             f"Status: Active\n\n"
             f"🔗 Personal Link:\n"
             f"{personal_link}"
