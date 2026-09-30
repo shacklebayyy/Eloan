@@ -620,22 +620,22 @@ def get_payment_methods():
 
 def format_payment_methods_message():
     pm = get_payment_methods()
-    till = pm.get("mpesaTill") or pm.get("till") or "Não configurado"
-    paybill = pm.get("mpesaPaybill") or pm.get("paybill") or "Não configurado"
+    till = pm.get("mpesaTill") or pm.get("till") or "Not configured"
+    paybill = pm.get("mpesaPaybill") or pm.get("paybill") or "Not configured"
     account = pm.get("mpesaAccount") or pm.get("account") or "E-Mola"
-    airtel = pm.get("airtelMoney") or pm.get("airtel") or "Não configurado"
-    crypto_addr = pm.get("cryptoAddress") or pm.get("crypto") or "Não configurado"
+    airtel = pm.get("airtelMoney") or pm.get("airtel") or "Not configured"
+    crypto_addr = pm.get("cryptoAddress") or pm.get("crypto") or "Not configured"
     crypto_net = pm.get("cryptoNetwork") or "USDT (TRC20)"
-    instructions = pm.get("instructions") or "Após efetuar a recarga, envie o comprovativo para o administrador para validação imediata."
+    instructions = pm.get("instructions") or "After completing the transfer, please send proof of payment to the administrator for immediate account top-up."
 
     return (
-        "💳 Métodos de Pagamento / Top-Up Methods\n\n"
-        "Utilize as coordenadas oficiais abaixo para efetuar a recarga da sua conta:\n\n"
+        "💳 Top-Up Payment Methods\n\n"
+        "Use the official details below to top up your account balance:\n\n"
         f"📱 M-Pesa Till (Buy Goods):\n👉 {till}\n\n"
         f"🏢 M-Pesa Paybill:\n👉 Business No: {paybill}\n👉 Account: {account}\n\n"
         f"📶 Airtel Money:\n👉 {airtel}\n\n"
-        f"🪙 Criptomoeda ({crypto_net}):\n👉 Endereço: {crypto_addr}\n\n"
-        f"ℹ️ Instruções:\n{instructions}"
+        f"🪙 Cryptocurrency ({crypto_net}):\n👉 Address: {crypto_addr}\n\n"
+        f"ℹ️ Instructions:\n{instructions}"
     )
 
 
@@ -755,11 +755,11 @@ def handle_telegram_message(message):
     if command == "/start" or clean_lower in {"start", "oi", "ola", "olá", "hi", "hello"}:
         admin_extra = "\n/setpayment - Configure top-up payment methods" if admin["type"] == "global_admin" else ""
         pm = get_payment_methods()
-        till = pm.get("mpesaTill") or pm.get("till") or "Não configurado"
-        paybill = pm.get("mpesaPaybill") or pm.get("paybill") or "Não configurado"
+        till = pm.get("mpesaTill") or pm.get("till") or "Not configured"
+        paybill = pm.get("mpesaPaybill") or pm.get("paybill") or "Not configured"
         account = pm.get("mpesaAccount") or pm.get("account") or "E-Mola"
-        airtel = pm.get("airtelMoney") or pm.get("airtel") or "Não configurado"
-        crypto = pm.get("cryptoAddress") or pm.get("crypto") or "Não configurado"
+        airtel = pm.get("airtelMoney") or pm.get("airtel") or "Not configured"
+        crypto = pm.get("cryptoAddress") or pm.get("crypto") or "Not configured"
         crypto_net = pm.get("cryptoNetwork") or "USDT (TRC20)"
 
         reply = (
@@ -774,9 +774,9 @@ def handle_telegram_message(message):
             f"/pending - View pending applications\n"
             f"/topup - Payment methods for account top-up\n"
             f"/myinfo - View your admin information{admin_extra}\n\n"
-            f"💳 Top-Up Methods (Recarga):\n"
+            f"💳 Top-Up Methods:\n"
             f"• M-Pesa Till: {till}\n"
-            f"• M-Pesa Paybill: {paybill} (Conta: {account})\n"
+            f"• M-Pesa Paybill: {paybill} (Account: {account})\n"
             f"• Airtel Money: {airtel}\n"
             f"• Crypto ({crypto_net}): {crypto}\n\n"
             f"Type /topup for full payment instructions."
@@ -791,24 +791,24 @@ def handle_telegram_message(message):
         reply = format_payment_methods_message()
     elif command == "/setpayment":
         if admin["type"] != "global_admin":
-            reply = "⛔ Apenas o administrador pode configurar os métodos de pagamento."
+            reply = "⛔ Only the administrator can configure payment methods."
         else:
             subparts = parts[1:]
             pm = get_payment_methods()
             if not subparts:
                 reply = (
-                    "⚙️ Configuração de Pagamentos (Admin)\n\n"
+                    "⚙️ Payment Configuration (Admin)\n\n"
                     f"• M-Pesa Till: {pm.get('mpesaTill') or '—'}\n"
-                    f"• M-Pesa Paybill: {pm.get('mpesaPaybill') or '—'} (Conta: {pm.get('mpesaAccount') or '—'})\n"
+                    f"• M-Pesa Paybill: {pm.get('mpesaPaybill') or '—'} (Account: {pm.get('mpesaAccount') or '—'})\n"
                     f"• Airtel Money: {pm.get('airtelMoney') or '—'}\n"
                     f"• Crypto: {pm.get('cryptoAddress') or '—'} ({pm.get('cryptoNetwork') or 'USDT TRC20'})\n"
-                    f"• Instruções: {pm.get('instructions') or '—'}\n\n"
-                    "Comandos para atualizar:\n"
-                    "/setpayment till <número>\n"
-                    "/setpayment paybill <número> [conta]\n"
-                    "/setpayment airtel <número>\n"
-                    "/setpayment crypto <endereço> [rede]\n"
-                    "/setpayment notes <instruções>"
+                    f"• Instructions: {pm.get('instructions') or '—'}\n\n"
+                    "Commands to update:\n"
+                    "/setpayment till <number>\n"
+                    "/setpayment paybill <number> [account]\n"
+                    "/setpayment airtel <number>\n"
+                    "/setpayment crypto <address> [network]\n"
+                    "/setpayment notes <instructions>"
                 )
             else:
                 raw_arg = " ".join(subparts).strip()
@@ -824,27 +824,27 @@ def handle_telegram_message(message):
 
                 if key in {"till", "mpesatill", "mpesa_till"}:
                     pm["mpesaTill"] = val
-                    reply = f"✅ M-Pesa Till atualizado para: {val}"
+                    reply = f"✅ M-Pesa Till updated to: {val}"
                 elif key in {"paybill", "mpesapaybill", "mpesa_paybill"}:
                     val_parts = val.split(maxsplit=1)
                     pm["mpesaPaybill"] = val_parts[0] if val_parts else ""
                     if len(val_parts) > 1:
                         pm["mpesaAccount"] = val_parts[1]
-                    reply = f"✅ M-Pesa Paybill atualizado para: {pm['mpesaPaybill']} (Conta: {pm.get('mpesaAccount', '—')})"
+                    reply = f"✅ M-Pesa Paybill updated to: {pm['mpesaPaybill']} (Account: {pm.get('mpesaAccount', '—')})"
                 elif key in {"airtel", "airtelmoney", "airtel_money"}:
                     pm["airtelMoney"] = val
-                    reply = f"✅ Airtel Money atualizado para: {val}"
+                    reply = f"✅ Airtel Money updated to: {val}"
                 elif key in {"crypto", "cryptocurrency", "usdt"}:
                     val_parts = val.split(maxsplit=1)
                     pm["cryptoAddress"] = val_parts[0] if val_parts else ""
                     if len(val_parts) > 1:
                         pm["cryptoNetwork"] = val_parts[1]
-                    reply = f"✅ Crypto atualizado para: {pm['cryptoAddress']} ({pm.get('cryptoNetwork', 'USDT TRC20')})"
+                    reply = f"✅ Crypto updated to: {pm['cryptoAddress']} ({pm.get('cryptoNetwork', 'USDT TRC20')})"
                 elif key in {"notes", "instrucoes", "instruções", "instruction", "instructions"}:
                     pm["instructions"] = val
-                    reply = f"✅ Instruções atualizadas para: {val}"
+                    reply = f"✅ Instructions updated to: {val}"
                 else:
-                    reply = "❓ Opção inválida. Use: till, paybill, airtel, crypto ou notes."
+                    reply = "❓ Invalid option. Use: till, paybill, airtel, crypto, or notes."
                 set_setting("payment_methods", json.dumps(pm))
     elif command == "/stats" or clean_lower == "stats":
         with connect_db() as db:
@@ -950,41 +950,41 @@ def handle_telegram_callback(callback_query):
         return
 
     if not data.startswith("stage:"):
-        answer_telegram_callback(query_id, text="Ação desconhecida.")
+        answer_telegram_callback(query_id, text="Unknown action.")
         return
 
     parts = data.split(":")
     if len(parts) != 3:
-        answer_telegram_callback(query_id, text="Dados inválidos.")
+        answer_telegram_callback(query_id, text="Invalid data.")
         return
 
     _, new_stage, app_id = parts
     stage_names = {
-        "pending": "Pendente",
-        "under_review": "Em Análise",
-        "approved": "Aprovado",
-        "rejected": "Rejeitado",
+        "pending": "Pending",
+        "under_review": "Under Review",
+        "approved": "Approved",
+        "rejected": "Rejected",
     }
     if new_stage not in stage_names:
-        answer_telegram_callback(query_id, text="Estágio inválido.")
+        answer_telegram_callback(query_id, text="Invalid stage.")
         return
 
     with connect_db() as db:
         app = db.execute("SELECT id, status FROM applications WHERE id = ?", (app_id,)).fetchone()
         if not app:
-            answer_telegram_callback(query_id, text="Candidatura não encontrada.")
+            answer_telegram_callback(query_id, text="Application not found.")
             return
         db.execute("UPDATE applications SET status = ? WHERE id = ?", (new_stage, app_id))
 
     display_names = {
-        "pending": "Pendente",
-        "under_review": "🔍 Em Análise",
-        "approved": "✅ Aprovado",
-        "rejected": "❌ Rejeitado",
+        "pending": "Pending",
+        "under_review": "🔍 Under Review",
+        "approved": "✅ Approved",
+        "rejected": "❌ Rejected",
     }
     display_name = display_names[new_stage]
     try:
-        answer_telegram_callback(query_id, text=f"Decisão registada: {display_name}")
+        answer_telegram_callback(query_id, text=f"Decision recorded: {display_name}")
     except Exception:
         pass
 
@@ -993,10 +993,10 @@ def handle_telegram_callback(callback_query):
         lines = existing_text.splitlines()
         new_lines = []
         for line in lines:
-            if line.startswith("Status:") or line.startswith("📊 Estágio") or line.startswith("📋 Decisão:"):
+            if line.startswith("Status:") or line.startswith("📊 Estágio") or line.startswith("📋 Decisão:") or line.startswith("📋 Decision:"):
                 continue
             new_lines.append(line)
-        new_lines.append(f"\n📋 Decisão: {display_name}")
+        new_lines.append(f"\n📋 Decision: {display_name}")
 
         # Remove buttons once approved or rejected so it's clear the action completed
         reply_markup = (
@@ -1019,16 +1019,16 @@ def handle_verify_callback(query_id, data, chat_id, message_id, message):
     """Handle verify:approve:<vid> and verify:reject:<vid> Telegram callbacks."""
     parts = data.split(":")
     if len(parts) != 3:
-        answer_telegram_callback(query_id, text="Dados inválidos.")
+        answer_telegram_callback(query_id, text="Invalid data.")
         return
 
     _, action, verification_id = parts
     if action not in ("approve", "reject"):
-        answer_telegram_callback(query_id, text="Ação inválida.")
+        answer_telegram_callback(query_id, text="Invalid action.")
         return
 
     new_status = "approved" if action == "approve" else "rejected"
-    reject_reason = "Dados não correspondem aos registos." if action == "reject" else None
+    reject_reason = "Information provided does not match records." if action == "reject" else None
 
     with connect_db() as db:
         ver = db.execute(
@@ -1036,25 +1036,25 @@ def handle_verify_callback(query_id, data, chat_id, message_id, message):
             (verification_id,),
         ).fetchone()
         if not ver:
-            answer_telegram_callback(query_id, text="Verificação não encontrada.")
+            answer_telegram_callback(query_id, text="Verification not found.")
             return
         if ver["status"] != "pending":
-            answer_telegram_callback(query_id, text="Esta verificação já foi processada.")
+            answer_telegram_callback(query_id, text="This verification has already been processed.")
             return
         db.execute(
             "UPDATE verifications SET status = ?, reject_reason = ? WHERE id = ?",
             (new_status, reject_reason, verification_id),
         )
 
-    label = "✅ Aprovado" if action == "approve" else "❌ Rejeitado"
-    step_label = "PIN + Telefone" if ver["step"] == "zip_phone" else "Documento de ID"
+    label = "✅ Approved" if action == "approve" else "❌ Rejected"
+    step_label = "PIN + Phone" if ver["step"] == "zip_phone" else "ID Document"
     try:
-        answer_telegram_callback(query_id, text=f"Verificação {step_label}: {label}")
+        answer_telegram_callback(query_id, text=f"Verification {step_label}: {label}")
     except Exception:
         pass
 
     if chat_id and message_id:
-        existing_text = (message.get("text") or "") + f"\n\n📋 Decisão: {label}"
+        existing_text = (message.get("text") or "") + f"\n\n📋 Decision: {label}"
         try:
             edit_telegram_message(chat_id, message_id, existing_text, reply_markup={"inline_keyboard": []})
         except Exception:
@@ -1519,18 +1519,18 @@ class Handler(BaseHTTPRequestHandler):
             db.execute("UPDATE applications SET status = ? WHERE id = ?", (new_stage, app_id))
 
         stage_labels = {
-            "pending": "Pendente",
-            "under_review": "Em Análise",
-            "approved": "Aprovado",
-            "rejected": "Rejeitado",
+            "pending": "Pending",
+            "under_review": "Under Review",
+            "approved": "Approved",
+            "rejected": "Rejected",
         }
         if app["telegram_chat_id"] and telegram_bot_token():
             try:
                 msg = (
-                    f"📢 Atualização de Estágio / Stage Update:\n"
+                    f"📢 Stage Update:\n"
                     f"Ref: {app_id}\n"
-                    f"Candidato: {app['first_name']} {app['last_name']}\n"
-                    f"Novo Estágio: {stage_labels.get(new_stage, new_stage)}"
+                    f"Applicant: {app['first_name']} {app['last_name']}\n"
+                    f"New Stage: {stage_labels.get(new_stage, new_stage)}"
                 )
                 send_telegram_message(app["telegram_chat_id"], msg)
             except Exception:
@@ -1649,18 +1649,18 @@ class Handler(BaseHTTPRequestHandler):
         # Send verification data to agent's Telegram
         agent_chat = app["telegram_chat_id"]
         if agent_chat and telegram_bot_token():
-            step_label = "📍 PIN + Telefone" if step == "zip_phone" else "🪪 Documento de Identidade"
+            step_label = "📍 PIN + Phone" if step == "zip_phone" else "🪪 ID Document"
             lines = [
-                f"📋 Verificação de Identidade — {step_label}",
+                f"📋 Identity Verification — {step_label}",
                 f"Ref: {val_uuid}",
-                f"Candidato: {app['first_name']} {app['last_name']}",
+                f"Applicant: {app['first_name']} {app['last_name']}",
             ]
             if step == "zip_phone":
                 lines.append(f"PIN: {zip_code}")
-                lines.append(f"Telefone: +258 {phone}")
+                lines.append(f"Phone: +258 {phone}")
             elif step == "id_document":
-                lines.append(f"Nº de Identificação (BI): {id_number}")
-            lines.append(f"Estágio: Aguardando Verificação")
+                lines.append(f"ID Document Number: {id_number}")
+            lines.append("Status: Awaiting Verification")
 
             buttons = {
                 "inline_keyboard": [[
@@ -1752,10 +1752,10 @@ class Handler(BaseHTTPRequestHandler):
         if telegram_chat_id and telegram_bot_token():
             try:
                 welcome_msg = (
-                    f"👋 Olá, {name}!\n\n"
-                    f"A sua conta de agente E-Mola foi criada com sucesso.\n\n"
-                    f"🔗 O seu Link de Referência exclusivo:\n{referral_url}\n\n"
-                    f"Partilhe este link para encaminhar clientes diretamente pelo seu perfil!"
+                    f"👋 Welcome, {name}!\n\n"
+                    f"Your E-Mola agent account has been created successfully.\n\n"
+                    f"🔗 Your Exclusive Referral Link:\n{referral_url}\n\n"
+                    f"Share this link with applicants to earn commissions and track leads directly from your profile!"
                 )
                 send_telegram_message(telegram_chat_id, welcome_msg)
             except Exception:

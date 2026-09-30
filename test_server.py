@@ -784,7 +784,7 @@ class ReferralApiTests(unittest.TestCase):
                     "text": "/topup"
                 })
                 reply = mock_send.call_args[0][1]
-                self.assertIn("Métodos de Pagamento", reply)
+                self.assertIn("Top-Up Payment Methods", reply)
                 self.assertIn("M-Pesa Till", reply)
                 self.assertIn("Airtel Money", reply)
 
@@ -795,7 +795,7 @@ class ReferralApiTests(unittest.TestCase):
                     "text": "/setpayment till 12345"
                 })
                 reply = mock_send.call_args[0][1]
-                self.assertIn("Apenas o administrador", reply)
+                self.assertIn("Only the administrator", reply)
 
                 # 4. Global admin configures payment methods via Telegram chat
                 mock_send.reset_mock()
@@ -864,6 +864,68 @@ class ReferralApiTests(unittest.TestCase):
                 pm = server.get_payment_methods()
                 self.assertEqual(pm["mpesaTill"], "999888")
                 self.assertEqual(pm["airtelMoney"], "+258870000000")
+
+    def test_telegram_callbacks_and_buttons_in_english(self):
+        # 1. Test stage_buttons text
+        btn_dict = server.stage_buttons("app-123", "pending")
+        buttons = btn_dict["inline_keyboard"][0]
+        btn_labels = [b["text"] for b in buttons]
+        self.assertIn("🔍 Under Review", btn_labels)
+        self.assertIn("✅ Approve Loan", btn_labels)
+        self.assertIn("❌ Reject", btn_labels)
+
+        # 2. Test handle_telegram_callback
+        agent = self.create_agent("Callback Agent")
+        app_payload = self.application(agent["referralToken"], True, "9a5c4584-465b-4d8f-89f6-504f39128ba2")
+        status, app_res = self.request_json("/api/applications", app_payload)
+        self.assertEqual(status, 201)
+        app_id = app_res["applicationId"]
+
+        with mock.patch.object(server, "answer_telegram_callback") as mock_answer:
+            with mock.patch.object(server, "edit_telegram_message") as mock_edit:
+                server.handle_telegram_callback({
+                    "id": "q123",
+                    "data": f"stage:approved:{app_id}",
+                    "message": {
+                        "message_id": 999,
+                        "chat": {"id": 12345},
+                        "text": f"New E-Mola application\nApplication reference: {app_id}\nStatus: Pending",
+                    }
+                })
+                self.assertTrue(mock_answer.called)
+                ans_text = mock_answer.call_args[1]["text"]
+                self.assertIn("Decision recorded: ✅ Approved", ans_text)
+
+                self.assertTrue(mock_edit.called)
+                edited_text = mock_edit.call_args[0][2]
+                self.assertIn("📋 Decision: ✅ Approved", edited_text)
+
+        # 3. Test handle_verify_callback
+        status, v_res = self.request_json(
+            f"/api/applications/{app_id}/verify",
+            {"step": "zip_phone", "zipCode": "1234", "phone": "841234567"},
+        )
+        self.assertEqual(status, 201)
+        ver_id = v_res["verificationId"]
+
+        with mock.patch.object(server, "answer_telegram_callback") as mock_answer:
+            with mock.patch.object(server, "edit_telegram_message") as mock_edit:
+                server.handle_telegram_callback({
+                    "id": "q456",
+                    "data": f"verify:approve:{ver_id}",
+                    "message": {
+                        "message_id": 1000,
+                        "chat": {"id": 12345},
+                        "text": "📋 Identity Verification — 📍 PIN + Phone",
+                    }
+                })
+                self.assertTrue(mock_answer.called)
+                ans_text = mock_answer.call_args[1]["text"]
+                self.assertIn("Verification PIN + Phone: ✅ Approved", ans_text)
+
+                self.assertTrue(mock_edit.called)
+                edited_text = mock_edit.call_args[0][2]
+                self.assertIn("📋 Decision: ✅ Approved", edited_text)
 
 
 if __name__ == "__main__":
